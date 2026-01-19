@@ -1,0 +1,38 @@
+Index: go.mod
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>module github.com/chronos3344/catalog-service\r\n\r\ngo 1.24.1\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/go.mod b/go.mod
+--- a/go.mod	(revision 51aa1468c0c8f77728c92df9a6e8f3746efa19b0)
++++ b/go.mod	(date 1768843339588)
+@@ -1,3 +1,8 @@
+ module github.com/chronos3344/catalog-service
+ 
+ go 1.24.1
++
++require (
++	github.com/joho/godotenv v1.5.1 // indirect
++	github.com/kelseyhightower/envconfig v1.4.0 // indirect
++)
+Index: internal/app/config/config.go
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/internal/app/config/config.go b/internal/app/config/config.go
+new file mode 100644
+--- /dev/null	(date 1768844296383)
++++ b/internal/app/config/config.go	(date 1768844296383)
+@@ -0,0 +1,9 @@
++package main
++
++func (c *Config) Load() error {
++	_ = godotenv.load()
++}
++
++type Config struct{}
++
++func main() {}
