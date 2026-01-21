@@ -1,4 +1,4 @@
-module github.com/chronos3344/my-awesome-service
+module github.com/chronos3344/catalog-service
 
 go 1.24.1
 

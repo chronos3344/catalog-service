@@ -9,18 +9,21 @@ import (
 
 func main() {
 	s := "Vladimir"
-	fmt.Printf("Hello and welcome, %s!\n", s)
+	fmt.Printf("Hello and welcome, %s!/n", s)
 
+	// Простая загрузка
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatal("Failed to load config:", err)
+		log.Fatal(err)
 	}
 
-	log.Printf("Server will start on port: %d", cfg.Server.Port)
-	log.Printf("Database DSN: postgresql://%s:$s@%s/%s",
-		cfg.Database.Username,
-		cfg.Database.Password,
-		cfg.Database.Address,
-		cfg.Database.Name)
+	// Или принудительная загрузка (завершит программу при ошибке)
+	// cfg := config.MustLoad()
 
+	fmt.Printf("Server running on %s:%s/n", cfg.Server.Host, cfg.Server.Port)
+	fmt.Printf("Database: %s@%s:%d/%s/n",
+		cfg.DB.User,
+		cfg.DB.Host,
+		cfg.DB.Port,
+		cfg.DB.Name)
 }
