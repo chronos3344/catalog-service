@@ -1,11 +1,14 @@
 package rprocessor
 
-// Обратите внимание на название пакета
-// Приставка r (m,p) будет добавляться во многих других пакетах.
-
 import (
-	"catalog-service/internal/app/config/config"
+	"fmt"
+	"log"
 	"net/http"
+
+	"github.com/chronos3344/catalog-service/internal/app/config/section"
+	"github.com/chronos3344/catalog-service/internal/app/handler"
+
+	"github.com/gorilla/mux"
 )
 
 type httpProc struct {
@@ -14,17 +17,46 @@ type httpProc struct {
 }
 
 func NewHttp(hHealth handler.Health, cfg section.ProcessorWebServer) *httpProc {
-	// создаем мультиплексор
+	// Создаем мультиплексор
+	r := mux.NewRouter()
 
-	// регистрируем HealthCheck
+	// Настраиваем NotFound handler
+	r.NotFoundHandler = http.HandlerFunc(handlerNotFound)
 
-	// здесь будет регистрация остальных хэндлеров
-	// TODO: добавить регистрацию продуктов, категорий и т.д.
+	// Регистрируем health-check хэндлер
+	vGenericRegHealthCheck(r, hHealth)
 
-	// обходим маршруты для дебага через r.Walk
-	// если не получится реализовать r.Walk() просто добавляем лог, когда регистрируем маршрут
+	// TODO: добавить регистрацию остальных хэндлеров
 
-	// создаем сервер и возвращаем его
+	// Обходим маршруты для дебага
+	err := r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+		path, _ := route.GetPathTemplate()
+		methods, _ := route.GetMethods()
+		log.Printf("Route registered: %s %s", methods, path)
+		return nil
+	})
+	if err != nil {
+		log.Printf("Error walking routes: %v", err)
+	}
 
-	return &s
+	// Создаем адрес для сервера
+	addr := fmt.Sprintf(":%d", cfg.Port)
+
+	// Инициализируем структуру httpProc
+	s := &httpProc{
+		server: http.Server{
+			Addr:    addr,
+			Handler: r,
+		},
+		addr: addr,
+	}
+
+	log.Printf("HTTP server routes registered")
+
+	return s
+}
+
+func (h *httpProc) Serve() error {
+	log.Printf("Starting HTTP server on %s", h.addr)
+	return h.server.ListenAndServe()
 }

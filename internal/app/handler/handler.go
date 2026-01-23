@@ -1,3 +1,11 @@
-package main
+package rhandler
 
-func main() {}
+import (
+	"net/http"
+)
+
+type (
+	Health interface {
+		LastCheck(w http.ResponseWriter, r *http.Request)
+	}
+)

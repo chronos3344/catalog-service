@@ -1,29 +1,23 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/chronos3344/catalog-service/internal/app/config"
+	_ "github.com/chronos3344/catalog-service/internal/app/config/section"
+	rhealth "github.com/chronos3344/catalog-service/internal/app/handler/health"
+	rprocessor "github.com/chronos3344/catalog-service/internal/app/processor/http"
 )
 
 func main() {
-	s := "Vladimir"
-	fmt.Printf("Hello and welcome, %s!/n", s)
-
-	// Простая загрузка
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to load config:", err)
 	}
 
-	// Или принудительная загрузка (завершит программу при ошибке)
-	// cfg := config.MustLoad()
+	healthHandler := rhealth.NewHandler()
 
-	fmt.Printf("Server running on %s:%s/n", cfg.Server.Host, cfg.Server.Port)
-	fmt.Printf("Database: %s@%s:%d/%s/n",
-		cfg.DB.User,
-		cfg.DB.Host,
-		cfg.DB.Port,
-		cfg.DB.Name)
+	httpServer := rprocessor.NewHttp(healthHandler, cfg.ProcessorWebServer)
+
+	log.Fatal("HTTP server error:", httpServer.Serve())
 }

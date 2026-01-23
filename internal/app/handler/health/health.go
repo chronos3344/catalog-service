@@ -1,6 +1,8 @@
-package rhealth // Обратите внимание на именование пакета!
+package rhealth
 
 import (
+	rhandler "github.com/chronos3344/catalog-service/internal/app/handler"
+
 	"net/http"
 )
 
@@ -11,8 +13,6 @@ func NewHandler() rhandler.Health {
 }
 
 func (h *handler) LastCheck(w http.ResponseWriter, r *http.Request) {
-	// Добавьте в хэадер http.StatusOK
 	w.WriteHeader(http.StatusOK)
-	// Добавьте в body ответа на запрос - "ok"
-	fmt.Fprint(w, "OK")
+	w.Write([]byte("ok"))
 }

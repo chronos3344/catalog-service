@@ -3,15 +3,17 @@ package config
 import (
 	"log"
 
+	"github.com/chronos3344/catalog-service/internal/app/config/section"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 )
 
 // Config - основная структура конфигурации
 type Config struct {
-	DB     DatabaseConfig
-	Server ServerConfig
-	Log    LogConfig
+	DB                 DatabaseConfig
+	Server             ServerConfig
+	Log                LogConfig
+	ProcessorWebServer section.ProcessorWebServer
 }
 
 // DatabaseConfig - конфигурация базы данных
