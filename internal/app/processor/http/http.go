@@ -6,17 +6,17 @@ import (
 	"net/http"
 
 	"github.com/chronos3344/catalog-service/internal/app/config/section"
-	"github.com/chronos3344/catalog-service/internal/app/handler"
+	rhandler "github.com/chronos3344/catalog-service/internal/app/handler"
 
 	"github.com/gorilla/mux"
 )
 
-type httpProc struct {
+type HttpProc struct {
 	server http.Server
 	addr   string
 }
 
-func NewHttp(hHealth handler.Health, cfg section.ProcessorWebServer) *httpProc {
+func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer) *HttpProc {
 	// Создаем мультиплексор
 	r := mux.NewRouter()
 
@@ -43,7 +43,7 @@ func NewHttp(hHealth handler.Health, cfg section.ProcessorWebServer) *httpProc {
 	addr := fmt.Sprintf(":%d", cfg.Port)
 
 	// Инициализируем структуру httpProc
-	s := &httpProc{
+	s := &HttpProc{
 		server: http.Server{
 			Addr:    addr,
 			Handler: r,
@@ -56,7 +56,7 @@ func NewHttp(hHealth handler.Health, cfg section.ProcessorWebServer) *httpProc {
 	return s
 }
 
-func (h *httpProc) Serve() error {
+func (h *HttpProc) Serve() error {
 	log.Printf("Starting HTTP server on %s", h.addr)
 	return h.server.ListenAndServe()
 }

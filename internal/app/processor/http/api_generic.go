@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func vGenericRegHealthCheck(r *mux.Router, h handler.Health) {
+func vGenericRegHealthCheck(r *mux.Router, h rhandler.Health) {
 	reg(r, http.MethodGet, "/health", http.HandlerFunc(h.LastCheck))
 }
 
