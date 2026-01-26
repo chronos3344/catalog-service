@@ -6,8 +6,8 @@ import (
 
 // RepositoryPostgres конфигурация PostgreSQL
 type RepositoryPostgres struct {
-	Address      string        `env:"APP_REPOSITORY_POSTGRES_ADDRESS" validate:"required"`
-	Name         string        `env:"APP_REPOSITORY_POSTGRES_NAME" validate:"required"`
+	Address      string        `env:"APP_REPOSITORY_POSTGRES_HOST" validate:"required"`
+	Name         string        `env:"APP_REPOSITORY_POSTGRES_PORT" validate:"required"`
 	Username     string        `env:"APP_REPOSITORY_POSTGRES_USERNAME" validate:"required"`
 	Password     string        `env:"APP_REPOSITORY_POSTGRES_PASSWORD" validate:"required"`
 	ReadTimeout  util.Duration `env:"APP_REPOSITORY_POSTGRES_READ_TIMEOUT" validate:"required"`
