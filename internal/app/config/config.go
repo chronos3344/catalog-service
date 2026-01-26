@@ -66,6 +66,7 @@ import (
 	"strings"
 
 	"github.com/chronos3344/catalog-service/internal/app/config/section"
+	"github.com/chronos3344/catalog-service/internal/app/util"
 	"github.com/joho/godotenv"
 )
 
