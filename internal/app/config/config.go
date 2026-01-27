@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/chronos3344/catalog-service/internal/app/config/section"
@@ -12,104 +13,111 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Root глобальная конфигурация приложения
 var Root = struct {
 	Repository section.Repository
 	Processor  section.Processor
 	Monitor    section.Monitor
 }{}
 
-// Load загружает конфигурацию из .env файла и переменных окружения
 func Load() {
-	// Загружаем .env файл (не критично, если его нет)
 	_ = godotenv.Load(".env")
-
-	// Загружаем конфигурацию из структуры
-	if err := loadConfig(&Root, "APP"); err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+	if err := load(&Root, "APP"); err != nil {
+		log.Fatalf("Config error: %v", err)
 	}
-
-	log.Println("Config loaded successfully")
+	log.Println("Config loaded")
 }
 
-// loadConfig рекурсивно загружает конфигурацию из переменных окружения
-func loadConfig(config interface{}, prefix string) error {
-	val := reflect.ValueOf(config).Elem()
-	typ := val.Type()
+func load(config interface{}, prefix string) error {
+	v := reflect.ValueOf(config).Elem()
+	t := v.Type()
 
-	for i := 0; i < val.NumField(); i++ {
-		field := val.Field(i)
-		fieldType := typ.Field(i)
+	for i := 0; i < v.NumField(); i++ {
+		f := v.Field(i)
+		ft := t.Field(i)
 
-		// Если поле является структурой, рекурсивно обрабатываем её
-		if field.Kind() == reflect.Struct {
-			newPrefix := prefix
-			if fieldType.Tag.Get("env") != "" {
-				newPrefix = fieldType.Tag.Get("env")
-			} else {
-				newPrefix = fmt.Sprintf("%s_%s", prefix, strings.ToUpper(fieldType.Name))
+		if f.Kind() == reflect.Struct {
+			p := ft.Tag.Get("env")
+			if p == "" {
+				p = prefix + "_" + strings.ToUpper(ft.Name)
 			}
-
-			if err := loadConfig(field.Addr().Interface(), newPrefix); err != nil {
+			if err := load(f.Addr().Interface(), p); err != nil {
 				return err
 			}
 			continue
 		}
 
-		// Получаем тег env для поля
-		envTag := fieldType.Tag.Get("env")
-		if envTag == "" {
-			envTag = fmt.Sprintf("%s_%s", prefix, strings.ToUpper(fieldType.Name))
+		key := ft.Tag.Get("env")
+		if key == "" {
+			key = prefix + "_" + strings.ToUpper(ft.Name)
 		}
 
-		// Получаем значение из переменных окружения
-		envValue := os.Getenv(envTag)
-		if envValue == "" {
-			// Проверяем required из тега validate
-			if strings.Contains(fieldType.Tag.Get("validate"), "required") {
-				return fmt.Errorf("missing required field: %s", envTag)
+		val := os.Getenv(key)
+		if val == "" {
+			if strings.Contains(ft.Tag.Get("validate"), "required") {
+				return missingField(key)
 			}
 			continue
 		}
 
-		// Устанавливаем значение в поле
-		if err := setFieldValue(&field, envValue); err != nil {
-			return fmt.Errorf("failed to set field %s: %w", fieldType.Name, err)
+		if err := set(&f, val); err != nil {
+			return fieldError(ft.Name, err)
 		}
 	}
-
 	return nil
 }
 
-// setFieldValue устанавливает значение поля на основе его типа
-func setFieldValue(field *reflect.Value, value string) error {
-	switch field.Kind() {
+func set(f *reflect.Value, val string) error {
+	switch f.Kind() {
 	case reflect.String:
-		field.SetString(value)
+		f.SetString(val)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		// Для кастомного типа Duration
-		if field.Type().String() == "util.Duration" {
-			var dur util.Duration
-			if err := dur.UnmarshalText([]byte(value)); err != nil {
-				return err
-			}
-			field.Set(reflect.ValueOf(dur))
-		} else {
-			// Для обычных int
-			var intVal int64
-			fmt.Sscanf(value, "%d", &intVal)
-			field.SetInt(intVal)
-		}
+		return setInt(f, val)
 	default:
-		// Пытаемся использовать TextUnmarshaler интерфейс
-		if field.CanInterface() {
-			if unmarshaler, ok := field.Interface().(interface {
-				UnmarshalText([]byte) error
-			}); ok {
-				return unmarshaler.UnmarshalText([]byte(value))
+		if f.CanInterface() {
+			if u, ok := f.Interface().(interface{ UnmarshalText(data []byte) error }); ok {
+				return u.UnmarshalText([]byte(val))
 			}
 		}
-		return fmt.Errorf("unsupported field type: %s", field.Type())
+		return unsupportedType(f.Type().String())
 	}
 	return nil
+}
+
+func setInt(f *reflect.Value, val string) error {
+	if f.Type().String() == "util.Duration" {
+		var d util.Duration
+		if err := d.UnmarshalText([]byte(val)); err != nil {
+			return err
+		}
+		f.Set(reflect.ValueOf(d))
+		return nil
+	}
+
+	n, err := strconv.ParseInt(val, 10, 64)
+	if err != nil {
+		return parseError(val)
+	}
+	f.SetInt(n)
+	return nil
+}
+
+// Минимальные вспомогательные функции
+func missingField(key string) error {
+	return errorf("missing required: %s", key)
+}
+
+func fieldError(name string, err error) error {
+	return errorf("field %s: %w", name, err)
+}
+
+func unsupportedType(typ string) error {
+	return errorf("unsupported type: %s", typ)
+}
+
+func parseError(val string) error {
+	return errorf("parse error: %s", val)
+}
+
+func errorf(format string, args ...interface{}) error {
+	return fmt.Errorf(format, args...)
 }
