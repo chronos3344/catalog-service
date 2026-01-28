@@ -1,7 +1,6 @@
 package util
 
 import (
-	//"fmt"
 	"time"
 )
 
@@ -15,14 +14,4 @@ func (d *Duration) UnmarshalText(text []byte) error {
 	var err error
 	d.Duration, err = time.ParseDuration(string(text))
 	return err
-}
-
-// MarshalText реализует интерфейс encoding.TextMarshaler
-func (d Duration) MarshalText() ([]byte, error) {
-	return []byte(d.String()), nil
-}
-
-// String возвращает строковое представление
-func (d Duration) String() string {
-	return d.Duration.String()
 }
