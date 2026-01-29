@@ -10,8 +10,7 @@ type Duration struct {
 }
 
 // UnmarshalText реализует интерфейс encoding.TextUnmarshaler
-func (d *Duration) UnmarshalText(text []byte) error {
-	var err error
+func (d *Duration) UnmarshalText(text []byte) (err error) {
 	d.Duration, err = time.ParseDuration(string(text))
 	return err
 }
