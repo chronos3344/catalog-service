@@ -6,26 +6,29 @@ package rprocessor
 import (
 	"fmt"
 	"log"
+	"net/http"
+	"time"
 
 	"github.com/chronos3344/catalog-service/internal/app/config/section"
 	rhandler "github.com/chronos3344/catalog-service/internal/app/handler"
-
-	"net/http"
-
 	"github.com/gorilla/mux"
 )
 
 type httpProc struct {
-	server http.Server
+	server *http.Server
 	addr   string
 }
 
 func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer) *httpProc {
 	// создаем мультиплексор
-	r := http.NewServeMux()
+	r := mux.NewRouter()
 
-	// регистрируем HealthCheck
-	r.HandleFunc("/health", hHealth.LastCheck).Methods("GET")
+	// Настраиваем NotFound handler
+	r.NotFoundHandler = http.HandlerFunc(handlerNotFound)
+
+	// Регистрируем health
+	//check хэндлер
+	vGenericRegHealthCheck(r, hHealth)
 
 	// здесь будет регистрация остальных хэндлеров
 	// TODO: добавить регистрацию продуктов, категорий и т.д.
@@ -33,34 +36,35 @@ func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer) *httpProc 
 	//r.HandleFunc("/categories", categoryHandler.GetCategories).Methods("GET")
 
 	// обходим маршруты для дебага через r.Walk
-	err := r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-		pathTemplate, err := route.GetPathTemplate()
-		if err == nil {
-			methods, _ := route.GetMethods()
-			log.Printf("Registered route: %s %s", methods, pathTemplate)
-		}
-		return nil
-	})
+	//err := r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+	//	pathTemplate, err := route.GetPathTemplate()
+	//	if err == nil {
+	//		methods, _ := route.GetMethods()
+	//		log.Printf("Registered route: %s %s", methods, pathTemplate)
+	//	}
+	//	return nil
+	//})
 	// если не получится реализовать r.Walk() просто добавляем лог, когда регистрируем маршрут
-
+	log.Printf("HTTP server routes registered")
 	// создаем сервер и возвращаем его
 	addr := fmt.Sprintf(":%d", cfg.ListenPort)
 
 	s := &httpProc{
-		server: http.Server{
-			Addr:    addr,
-			Handler: r,
+		server: &http.Server{
+			Addr:              addr,
+			Handler:           r,
+			ReadHeaderTimeout: 5 * time.Second,
 		},
 		addr: addr,
 		//router: r,
 	}
 
 	log.Printf("HTTP server configured on %s", addr)
-	return &s
+	return s
 }
 
 // Start запускает HTTP сервер
-func (h *httpProc) Start() error {
+func (h *httpProc) Serve() error {
 	log.Printf("Starting HTTP server on %s", h.addr)
 	return h.server.ListenAndServe()
 }
