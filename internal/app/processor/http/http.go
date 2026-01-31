@@ -1,8 +1,5 @@
 package rprocessor
 
-// Обратите внимание на название пакета
-// Приставка r (m,p) будет добавляться во многих других пакетах.
-
 import (
 	"fmt"
 	"log"
@@ -26,29 +23,21 @@ func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer) *httpProc 
 	// Настраиваем NotFound handler
 	r.NotFoundHandler = http.HandlerFunc(handlerNotFound)
 
-	// Регистрируем health
-	//check хэндлер
+	// Регистрируем healthcheck хэндлер
 	vGenericRegHealthCheck(r, hHealth)
 
-	// здесь будет регистрация остальных хэндлеров
-	// TODO: добавить регистрацию продуктов, категорий и т.д.
-	//r.HandleFunc("/products", productHandler.GetAllProducts).Methods("GET")
-	//r.HandleFunc("/categories", categoryHandler.GetCategories).Methods("GET")
-
-	// обходим маршруты для дебага через r.Walk
-	//err := r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-	//	pathTemplate, err := route.GetPathTemplate()
-	//	if err == nil {
-	//		methods, _ := route.GetMethods()
-	//		log.Printf("Registered route: %s %s", methods, pathTemplate)
-	//	}
-	//	return nil
-	//})
+	//обходим маршруты для дебага через r.Walk
+	_ := r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+		pathTemplate, _ := route.GetPathTemplate()
+		methods, _ := route.GetMethods()
+		log.Printf("Registered route: %s %s", methods, pathTemplate)
+		return nil
+	})
 	// если не получится реализовать r.Walk() просто добавляем лог, когда регистрируем маршрут
-	log.Printf("HTTP server routes registered")
+	//log.Printf("HTTP server routes registered")
+
 	// создаем сервер и возвращаем его
 	addr := fmt.Sprintf(":%d", cfg.ListenPort)
-
 	s := &httpProc{
 		server: &http.Server{
 			Addr:              addr,

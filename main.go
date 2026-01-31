@@ -9,9 +9,7 @@ import (
 )
 
 func main() {
-
 	// Загружаем конфигурацию
-
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
