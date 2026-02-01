@@ -27,7 +27,7 @@ func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer) *httpProc 
 	vGenericRegHealthCheck(r, hHealth)
 
 	//обходим маршруты для дебага через r.Walk
-	_ := r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+	_ = r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 		pathTemplate, _ := route.GetPathTemplate()
 		methods, _ := route.GetMethods()
 		log.Printf("Registered route: %s %s", methods, pathTemplate)
