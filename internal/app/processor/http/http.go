@@ -33,9 +33,6 @@ func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer) *httpProc 
 		log.Printf("Registered route: %s %s", methods, pathTemplate)
 		return nil
 	})
-	// если не получится реализовать r.Walk() просто добавляем лог, когда регистрируем маршрут
-	//log.Printf("HTTP server routes registered")
-
 	// создаем сервер и возвращаем его
 	addr := fmt.Sprintf(":%d", cfg.ListenPort)
 	s := &httpProc{
@@ -52,7 +49,7 @@ func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer) *httpProc 
 	return s
 }
 
-// Start запускает HTTP сервер
+// запуск HTTP серверa
 func (h *httpProc) Serve() error {
 	log.Printf("Starting HTTP server on %s", h.addr)
 	return h.server.ListenAndServe()

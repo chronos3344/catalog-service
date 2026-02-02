@@ -13,7 +13,6 @@ func vGenericRegHealthCheck(r *mux.Router, h rhandler.Health) {
 }
 
 func handlerNotFound(w http.ResponseWriter, _ *http.Request) {
-	// Передаем в заголовок http.StatusNotFound
 	w.WriteHeader(http.StatusNotFound)
 	if _, err := w.Write([]byte("not found")); err != nil {
 		log.Printf("Failed to write response: %v", err)

@@ -30,9 +30,4 @@ func Load() (*Config, error) {
 	log.Println("Config loaded successfully")
 	return &cfg, nil
 
-	//if err := envconfig.Process("APP", &Root); err != nil {
-	//	log.Fatalf("Failed parse: %v", err)
-	//}
-	//log.Println("Config loaded")
-	//return &Root, nil
 }
