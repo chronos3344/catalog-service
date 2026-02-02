@@ -16,13 +16,18 @@ type Config struct {
 
 var Root Config
 
-func Load() {
+func Load() (*Config, error) {
 	if err := godotenv.Load(); err != nil {
 		log.Printf(".env file not found")
 	}
 
-	if err := envconfig.Process("APP", &Root); err != nil {
-		log.Fatalf("Failed parse: %v", err)
+	var cfg Config
+	if err := envconfig.Process("APP", &cfg); err != nil {
+		return nil, err
 	}
-	log.Println("Config loaded")
+
+	Root = cfg
+	log.Println("Config loaded successfully")
+	return &cfg, nil
+
 }
