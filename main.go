@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/chronos3344/catalog-service/internal/app/config"
-	"github.com/chronos3344/catalog-service/internal/app/config/section"
+	//"github.com/chronos3344/catalog-service/internal/app/config/section"
 	rhealth "github.com/chronos3344/catalog-service/internal/app/handler/health"
 	rprocessor "github.com/chronos3344/catalog-service/internal/app/processor/http"
 	rcpostgres "github.com/chronos3344/catalog-service/internal/app/repository/postgres"
@@ -21,7 +21,7 @@ func main() {
 	ctx := context.Background()
 
 	// Инициализация клиента для БД
-	_, err := rcpostgres.NewConn(ctx, cfg.RepositoryPostgres)
+	_, err = rcpostgres.NewConn(ctx, cfg.Repository.Postgres)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
