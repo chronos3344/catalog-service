@@ -30,17 +30,13 @@ func (c *Client) GetRawBunDB() *bun.DB {
 func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, error) {
 	var u url.URL
 	u.Scheme = "postgres"
-	u.Host = cfg.Address // Ссылка на конфиг с Адресом
+	u.Host = cfg.Address
 	u.User = url.UserPassword(cfg.Username, cfg.Password)
-	u.Path = "/" + cfg.Name // Ссылка на конфиг с названием базы данных
+	u.Path = "/" + cfg.Name
 
 	args := make(url.Values)
-	args.Set("sslmode", "disable") // Создаем query param с флагом отключенного SSL (Протокол безопасности),
-	// так как мы его не настроили.
-	u.RawQuery = args.Encode() // И шифруем аргументы в наш URL.
-
-	// В результате получим URL для подключения в нужном формате с отключенным SSL:
-	// postgres://username:password@host:port/dbname?sslmode=disable
+	args.Set("sslmode", "disable")
+	u.RawQuery = args.Encode()
 
 	dsn := u.String()
 
@@ -70,7 +66,8 @@ func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, erro
 	client := &Client{
 		rawBunDB: rawBunDB,
 		cfg:      cfg,
+		_bunDB:   rawBunDB,
 	}
-	client._bunDB = rawBunDB
+
 	return client, nil
 }

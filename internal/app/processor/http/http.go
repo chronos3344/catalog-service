@@ -17,23 +17,19 @@ type httpProc struct {
 }
 
 func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer) *httpProc {
-	// создаем мультиплексор
 	r := mux.NewRouter()
 
-	// Настраиваем NotFound handler
 	r.NotFoundHandler = http.HandlerFunc(handlerNotFound)
 
-	// Регистрируем healthcheck хэндлер
 	vGenericRegHealthCheck(r, hHealth)
 
-	//обходим маршруты для дебага через r.Walk
 	_ = r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 		pathTemplate, _ := route.GetPathTemplate()
 		methods, _ := route.GetMethods()
 		log.Printf("Registered route: %s %s", methods, pathTemplate)
 		return nil
 	})
-	// создаем сервер и возвращаем его
+
 	addr := fmt.Sprintf(":%d", cfg.ListenPort)
 	s := &httpProc{
 		server: &http.Server{
@@ -49,7 +45,6 @@ func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer) *httpProc 
 	return s
 }
 
-// запуск HTTP серверa
 func (h *httpProc) Serve() error {
 	log.Printf("Starting HTTP server on %s", h.addr)
 	return h.server.ListenAndServe()
