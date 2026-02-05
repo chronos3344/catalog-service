@@ -7,7 +7,6 @@ import (
 type Repository struct {
 	Postgres RepositoryPostgres
 }
-
 type RepositoryPostgres struct {
 	Address      string        `validate:"required"`
 	Name         string        `validate:"required"`
