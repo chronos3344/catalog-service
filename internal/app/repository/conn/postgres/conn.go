@@ -86,7 +86,7 @@ func (c *Client) Migrate(ctx context.Context) (oldVer, newVer int64, err error) 
 		migrate.WithLocksTableName(c.cfg.MigrationTable + "_lock"),
 		migrate.WithMarkAppliedOnSuccess(true),
 	}
-	m := migrate.NewMigrator(c.db, migrations, opts...)
+	m := migrate.NewMigrator(c.rawBunDB, migrations, opts...)
 	// Инициализируем таблицу миграций
 	if err := m.Init(ctx); err != nil {
 		return 0, 0, fmt.Errorf("failed to init migrations table: %w", err)
@@ -100,13 +100,12 @@ func (c *Client) Migrate(ctx context.Context) (oldVer, newVer int64, err error) 
 
 	// Вычисляем oldVer - текущую версию ДО применения новых миграций
 	if len(applied) > 0 {
-		// Первый элемент имеет наибольшую версию (применённые миграции отсортированы по убыванию)
 		oldVer, err = extractMigrationVersion(applied[0].Name)
 		if err != nil {
 			return 0, 0, fmt.Errorf("failed to parse old migration version: %w", err)
 		}
 	} else {
-		oldVer = 0 // Если нет применённых миграций
+		oldVer = 0
 	}
 
 	// Применяем новые миграции
@@ -134,4 +133,13 @@ func (c *Client) Migrate(ctx context.Context) (oldVer, newVer int64, err error) 
 	}
 
 	return oldVer, newVer, nil
+}
+
+func extractMigrationVersion(name string) (int64, error) {
+	var version int64
+	_, err := fmt.Sscanf(name, "%d_", &version)
+	if err != nil {
+		return 0, fmt.Errorf("invalid migration name format: %s", name)
+	}
+	return version, nil
 }
