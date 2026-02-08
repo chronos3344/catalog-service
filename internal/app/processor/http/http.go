@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gorilla/mux"
+
 	"github.com/chronos3344/catalog-service/internal/app/config/section"
 	rhandler "github.com/chronos3344/catalog-service/internal/app/handler"
-	"github.com/gorilla/mux"
 )
 
 type httpProc struct {
@@ -16,7 +17,8 @@ type httpProc struct {
 	addr   string
 }
 
-func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer) *httpProc {
+func NewHttp(hHealth rhandler.Health, hCategory rhandler.Category, hProduct rhandler.Product,
+	cfg section.ProcessorWebServer) *httpProc {
 	r := mux.NewRouter()
 
 	r.NotFoundHandler = http.HandlerFunc(handlerNotFound)
