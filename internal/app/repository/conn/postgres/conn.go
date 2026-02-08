@@ -8,9 +8,11 @@ import (
 	"time"
 
 	"github.com/chronos3344/catalog-service/internal/app/config/section"
+	"github.com/chronos3344/catalog-service/migration"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
+	"github.com/uptrace/bun/migrate"
 )
 
 type (
@@ -70,4 +72,74 @@ func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, erro
 	}
 
 	return client, nil
+}
+
+func (c *Client) Migrate(ctx context.Context) (oldVer, newVer int64, err error) {
+	migrations := migrate.NewMigrations()
+
+	if err = migrations.Discover(migration.Postgres); err != nil {
+		return 0, 0, fmt.Errorf("failed to discover migrations: %w", err)
+	}
+
+	opts := []migrate.MigratorOption{
+		migrate.WithTableName(c.cfg.MigrationTable),
+		migrate.WithLocksTableName(c.cfg.MigrationTable + "_lock"),
+		migrate.WithMarkAppliedOnSuccess(true),
+	}
+	m := migrate.NewMigrator(c.rawBunDB, migrations, opts...)
+	// Инициализируем таблицу миграций
+	if err := m.Init(ctx); err != nil {
+		return 0, 0, fmt.Errorf("failed to init migrations table: %w", err)
+	}
+
+	// Получаем применённые миграции (в порядке убывания)
+	applied, err := m.AppliedMigrations(ctx)
+	if err != nil {
+		return 0, 0, fmt.Errorf("failed to get applied migrations: %w", err)
+	}
+
+	// Вычисляем oldVer - текущую версию ДО применения новых миграций
+	if len(applied) > 0 {
+		oldVer, err = extractMigrationVersion(applied[0].Name)
+		if err != nil {
+			return 0, 0, fmt.Errorf("failed to parse old migration version: %w", err)
+		}
+	} else {
+		oldVer = 0
+	}
+
+	// Применяем новые миграции
+	mgg, err := m.Migrate(ctx)
+	if err != nil {
+		return oldVer, oldVer, fmt.Errorf("failed to apply migrations: %w", err)
+	}
+
+	// Вычисляем newVer на основе применённых миграций
+	newVer = oldVer
+
+	if len(mgg.Migrations) > 0 {
+		// Ищем максимальную версию среди всех применённых миграций
+		maxVer := oldVer
+		for _, mg := range mgg.Migrations {
+			ver, err := extractMigrationVersion(mg.Name)
+			if err != nil {
+				return oldVer, oldVer, fmt.Errorf("failed to parse new migration version: %w", err)
+			}
+			if ver > maxVer {
+				maxVer = ver
+			}
+		}
+		newVer = maxVer
+	}
+
+	return oldVer, newVer, nil
+}
+
+func extractMigrationVersion(name string) (int64, error) {
+	var version int64
+	_, err := fmt.Sscanf(name, "%d_", &version)
+	if err != nil {
+		return 0, fmt.Errorf("invalid migration name format: %s", name)
+	}
+	return version, nil
 }
