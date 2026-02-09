@@ -17,8 +17,7 @@ type httpProc struct {
 	addr   string
 }
 
-func NewHttp(hHealth rhandler.Health, hCategory rhandler.Category, hProduct rhandler.Product,
-	cfg section.ProcessorWebServer) *httpProc {
+func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer) *httpProc {
 	r := mux.NewRouter()
 
 	r.NotFoundHandler = http.HandlerFunc(handlerNotFound)

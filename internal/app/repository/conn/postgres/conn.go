@@ -7,12 +7,13 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/chronos3344/catalog-service/internal/app/config/section"
-	"github.com/chronos3344/catalog-service/migration"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/uptrace/bun/migrate"
+
+	"github.com/chronos3344/catalog-service/internal/app/config/section"
+	"github.com/chronos3344/catalog-service/migration"
 )
 
 type (
@@ -41,6 +42,7 @@ func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, erro
 	u.RawQuery = args.Encode()
 
 	dsn := u.String()
+	fmt.Printf("PostgreSQL connection URL: %s\n", dsn)
 
 	fmt.Printf("PostgreSQL connection timeouts - Read: %v, Write: %v\n",
 		cfg.ReadTimeout, cfg.WriteTimeout)
