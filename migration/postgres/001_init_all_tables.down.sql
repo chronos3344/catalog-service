@@ -1,0 +1,5 @@
+DROP TABLE IF EXISTS category CASCADE;
+
+--bun:split
+
+DROP TABLE IF EXISTS product CASCADE;
