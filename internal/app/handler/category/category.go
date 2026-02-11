@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	rhandler "github.com/chronos3344/catalog-service/internal/app/handler"
+	"github.com/chronos3344/catalog-service/internal/app/service"
 )
 
 type handler struct {
