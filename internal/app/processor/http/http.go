@@ -17,7 +17,7 @@ type httpProc struct {
 	addr   string
 }
 
-func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer) *httpProc {
+func NewHttp(hHealth rhandler.Health, hCategory rhandler.Category, hProduct rhandler.Product, cfg section.ProcessorWebServer) *httpProc {
 	r := mux.NewRouter()
 
 	r.NotFoundHandler = http.HandlerFunc(handlerNotFound)
@@ -40,6 +40,14 @@ func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer) *httpProc 
 		},
 		addr: addr,
 		//router: r,
+	}
+	// API version 1
+	var rV1 = r.PathPrefix("/v1").Subrouter()
+	if hCategory != nil {
+		v1RegCategoryHandler(rV1, hCategory)
+	}
+	if hProduct != nil {
+		v1RegProductHandler(rV1, hProduct)
 	}
 
 	log.Printf("HTTP server configured on %s", addr)

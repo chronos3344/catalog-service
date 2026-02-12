@@ -3,30 +3,99 @@ package mcategory
 import (
 	"context"
 
-	"catalog-service/internal/app/repository"
+	"github.com/chronos3344/catalog-service/internal/app/entity"
+	"github.com/chronos3344/catalog-service/internal/app/repository"
+	"github.com/google/uuid"
 )
 
-type (
-	service struct {
-		repoCategory repository.Category
-	}
-)
+type service struct {
+	repoCategory repository.Category
+}
 
-// Наша функция-билдер
 func NewService(repoCategory repository.Category) service.Category {
 	return &service{
 		repoCategory: repoCategory,
 	}
 }
 
-// Опять же реализовываем наш интерфейс, здесь уже расписываем логику
-func (s *service) Create(ctx context.Context, name string, price float64, category_guid uuid.UUID, description string) (entity.ResponseCategoryCreate, error) {
-	panic("implement me!")
+func (s *service) Create(ctx context.Context, name string) (entity.ResponseCategoryCreate, error) {
+	existing, err := s.repoCategory.GetByName(ctx, name)
+	if err == nil && existing.GUID != uuid.Nil {
+		return entity.ResponseCategoryCreate{}, repository.ErrConflict
+	}
 
-	// Здесь распологается основная логика.
-	// Например мы хотим создать товар, который уже существует, мы должные вернуть ошибку в таком случае.
-	// Мы например можем проверить базу данных на дубликаты, по параметрам которые нам пришли в запросе
-	// или попытаться вставить данные, как есть, но получить ошибку при попытке обработки от БД. На ваш выбор.
+	category := entity.Category{
+		Name: name,
+	}
 
-	// Пока можно не следовать формату возврата ошибок из описания API, но основные кейсы должны обрабатываться корректно.
+	created, err := s.repoCategory.Create(ctx, category)
+	if err != nil {
+		return entity.ResponseCategoryCreate{}, err
+	}
+
+	return entity.ResponseCategoryCreate{
+		GUID: created.GUID,
+		Name: created.Name,
+	}, nil
+}
+
+func (s *service) Get(ctx context.Context, guid uuid.UUID) (entity.ResponseCategoryGet, error) {
+	category, err := s.repoCategory.GetByGUID(ctx, guid)
+	if err != nil {
+		return entity.ResponseCategoryGet{}, err
+	}
+
+	return entity.ResponseCategoryGet{
+		GUID: category.GUID,
+		Name: category.Name,
+	}, nil
+}
+
+func (s *service) List(ctx context.Context) (entity.ResponseCategoryList, error) {
+	categories, err := s.repoCategory.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var response entity.ResponseCategoryList
+	for _, cat := range categories {
+		response = append(response, entity.ResponseCategoryGet{
+			GUID: cat.GUID,
+			Name: cat.Name,
+		})
+	}
+	return response, nil
+}
+
+func (s *service) Update(ctx context.Context, guid uuid.UUID, name string) (entity.ResponseCategoryUpdate, error) {
+	category, err := s.repoCategory.GetByGUID(ctx, guid)
+	if err != nil {
+		return entity.ResponseCategoryUpdate{}, err
+	}
+
+	existing, err := s.repoCategory.GetByName(ctx, name)
+	if err == nil && existing.GUID != guid && existing.GUID != uuid.Nil {
+		return entity.ResponseCategoryUpdate{}, repository.ErrConflict
+	}
+
+	category.Name = name
+
+	updated, err := s.repoCategory.Update(ctx, category)
+	if err != nil {
+		return entity.ResponseCategoryUpdate{}, err
+	}
+
+	return entity.ResponseCategoryUpdate{
+		GUID: updated.GUID,
+		Name: updated.Name,
+	}, nil
+}
+
+func (s *service) Delete(ctx context.Context, guid uuid.UUID) error {
+	_, err := s.repoCategory.GetByGUID(ctx, guid)
+	if err != nil {
+		return err
+	}
+
+	return s.repoCategory.Delete(ctx, guid)
 }

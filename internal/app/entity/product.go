@@ -8,50 +8,62 @@ import (
 )
 
 type Product struct {
-	bun.BaseModel `bun:"table:products, alias:p" json:"bun_._base_model"`
+	bun.BaseModel `bun:"table:products,alias:p"`
 
-	ID           int64     `bun:"id,pk,autoincrement" json:"id,omitempty"`
-	Guid         uuid.UUID `bun:"guid" json:"guid,omitempty"`
-	Name         string    `bun:"name" json:"name,omitempty"`
-	Description  string    `bun:"description" json:"description,omitempty"`
-	Price        float64   `bun:"price" json:"price,omitempty"`
-	CategoryGuid uuid.UUID `bun:"category_guid" json:"category_guid,omitempty"`
-	CreatedAt    time.Time `bun:"created_at" json:"created_at"`
-	UpdatedAt    time.Time `bun:"updated_at" json:"updated_at"`
+	ID           int64     `bun:"id,pk,autoincrement" json:"id"`
+	GUID         uuid.UUID `bun:"guid,type:uuid,pk,default:gen_random_uuid()" json:"guid"`
+	Name         string    `bun:"name,notnull,unique" json:"name"`
+	Description  *string   `bun:"description" json:"description"`
+	Price        float64   `bun:"price,type:decimal(12,3),notnull" json:"price"`
+	CategoryGUID uuid.UUID `bun:"category_guid,type:uuid,notnull" json:"category_guid"`
+	CreatedAt    time.Time `bun:"created_at,notnull,default:current_timestamp" json:"created_at"`
+	UpdatedAt    time.Time `bun:"updated_at,notnull,default:current_timestamp" json:"updated_at"`
 	Category     *Category `bun:"rel:belongs_to,join:category_guid=guid" json:"category,omitempty"`
 }
+
 // RequestProductCreate - модель для создания продукта
 type RequestProductCreate struct {
 	Name         string    `json:"name"`
-	Description  string    `json:"description,omitempty"`
 	Price        float64   `json:"price"`
 	CategoryGUID uuid.UUID `json:"category_guid"`
+	Description  *string   `json:"description"`
 }
 
-// RequestProductUpdate - модель для обновления продукта
+type ResponseProductCreate struct {
+	GUID         uuid.UUID `json:"guid"`
+	Name         string    `json:"name"`
+	Price        float64   `json:"price"`
+	CategoryGUID uuid.UUID `json:"category_guid"`
+	Description  *string   `json:"description"`
+}
+
+type ResponseProductGet struct {
+	GUID         uuid.UUID `json:"guid"`
+	Name         string    `json:"name"`
+	Price        float64   `json:"price"`
+	CategoryGUID uuid.UUID `json:"category_guid"`
+	Description  *string   `json:"description"`
+}
+
 type RequestProductUpdate struct {
-	Name         *string    `json:"name,omitempty"`
-	Description  *string    `json:"description,omitempty"`
-	Price        *float64   `json:"price,omitempty"`
-	CategoryGUID *uuid.UUID `json:"category_guid,omitempty"`
+	Name         *string    `json:"name"`
+	Price        *float64   `json:"price"`
+	CategoryGUID *uuid.UUID `json:"category_guid"`
+	Description  *string    `json:"description"`
 }
 
-// ResponseProduct - модель для ответа с данными продукта
-type ResponseProduct struct {
-	GUID         uuid.UUID           `json:"guid"`
-	Name         string              `json:"name"`
-	Description  string              `json:"description,omitempty"`
-	Price        float64             `json:"price"`
-	CategoryGUID uuid.UUID           `json:"category_guid"`
-	Category     *ResponseCategory   `json:"category,omitempty"`
-	CreatedAt    string              `json:"created_at"`
-	UpdatedAt    string              `json:"updated_at"`
+type ResponseProductUpdate struct {
+	GUID         uuid.UUID `json:"guid"`
+	Name         string    `json:"name"`
+	Price        float64   `json:"price"`
+	CategoryGUID uuid.UUID `json:"category_guid"`
+	Description  *string   `json:"description"`
 }
 
-// ResponseProductList - модель для списка продуктов
-type ResponseProductList struct {
-	Items      []ResponseProduct `json:"items"`
-	TotalCount int               `json:"total_count"`
-	Page       int               `json:"page"`
-	Limit      int               `json:"limit"`
+type RequestProductList struct {
+	CategoryGUID *uuid.UUID `json:"category_guid"`
+	MinPrice     *float64   `json:"min_price"`
+	MaxPrice     *float64   `json:"max_price"`
 }
+
+type ResponseProductList []ResponseProductGet
