@@ -3,9 +3,8 @@ package repository
 import (
 	"context"
 
-	"github.com/google/uuid"
-
 	"github.com/chronos3344/catalog-service/internal/app/entity"
+	"github.com/google/uuid"
 )
 
 type Category interface {

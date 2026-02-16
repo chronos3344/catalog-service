@@ -65,7 +65,10 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(resp)
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		return
+	}
 }
 
 func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
@@ -89,7 +92,10 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		return
+	}
 }
 
 func (h *handler) List(w http.ResponseWriter, r *http.Request) {
@@ -115,7 +121,10 @@ func (h *handler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		return
+	}
 }
 
 func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
@@ -154,7 +163,10 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		return
+	}
 }
 
 func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {

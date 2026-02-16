@@ -7,13 +7,12 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/chronos3344/catalog-service/internal/app/config/section"
+	"github.com/chronos3344/catalog-service/migration"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/uptrace/bun/migrate"
-
-	"github.com/chronos3344/catalog-service/internal/app/config/section"
-	"github.com/chronos3344/catalog-service/migration"
 )
 
 type (

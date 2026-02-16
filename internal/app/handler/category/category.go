@@ -5,13 +5,12 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
-
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	"github.com/chronos3344/catalog-service/internal/app/handler"
 	"github.com/chronos3344/catalog-service/internal/app/repository"
 	"github.com/chronos3344/catalog-service/internal/app/service"
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 type handler struct {

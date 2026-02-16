@@ -18,7 +18,7 @@ type repoPg struct {
 }
 
 func NewRepoFromPostgres(_ context.Context, d *rcpostgres.Client) (repository.Category, error) {
-	return &repoPg{db: d}, nil
+	return &repoPg{db: *d}, nil
 }
 
 func (r *repoPg) Create(ctx context.Context, category entity.Category) (entity.Category, error) {

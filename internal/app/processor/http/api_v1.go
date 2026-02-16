@@ -3,7 +3,7 @@ package rprocessor
 import (
 	"github.com/gorilla/mux"
 
-	"github.com/chronos3344/catalog-service/internal/app/handler"
+	rhandler "github.com/chronos3344/catalog-service/internal/app/handler"
 )
 
 func v1RegCategoryHandler(r1 *mux.Router, h rhandler.Category) {

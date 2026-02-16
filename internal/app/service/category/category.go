@@ -5,6 +5,7 @@ import (
 
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	"github.com/chronos3344/catalog-service/internal/app/repository"
+
 	"github.com/google/uuid"
 )
 
