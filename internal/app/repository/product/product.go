@@ -17,8 +17,8 @@ type repoPg struct {
 	db *bun.DB
 }
 
-func NewRepoFromPostgres(_ context.Context, d *rcpostgres.Client) (repository.Product, error) {
-	return &repoPg{db: *d}, nil
+func NewRepoFromPostgres(_ context.Context, d *rcpostgres.Client) (*repoPg, error) {
+	return &repoPg{db: d.GetRawBunDB()}, nil
 }
 
 func (r *repoPg) Create(ctx context.Context, product entity.Product) (entity.Product, error) {
@@ -38,12 +38,14 @@ func (r *repoPg) GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Product,
 	return product, nil
 }
 
-func (r *repoPg) GetByName(ctx context.Context, name string) (entity.Product, error) {
+func (r *repoPg) GetByNameAndCategory(ctx context.Context, name string, categoryGUID uuid.UUID) (entity.Product, error) {
 	var product entity.Product
-	err := r.db.NewSelect().Model(&product).Where("name = ?", name).Scan(ctx)
+	err := r.db.NewSelect().Model(&product).
+		Where("name = ? AND category_guid = ?", name, categoryGUID).
+		Scan(ctx)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return entity.Product{}, repository.ErrNotFound
+			return entity.Product{}, nil
 		}
 		return entity.Product{}, err
 	}
@@ -64,7 +66,7 @@ func (r *repoPg) List(ctx context.Context, filter entity.RequestProductList) ([]
 	}
 
 	var products []entity.Product
-	err := query.Scan(ctx)
+	err := query.Order("created_at DESC").Scan(ctx)
 	return products, err
 }
 

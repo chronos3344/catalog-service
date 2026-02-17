@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS categories (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
 --bun:split
 
 CREATE TABLE IF NOT EXISTS products (
@@ -15,5 +16,9 @@ CREATE TABLE IF NOT EXISTS products (
     price DECIMAL(12,3) NOT NULL,
     category_guid UUID NOT NULL REFERENCES categories(guid) ON DELETE RESTRICT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(name, category_guid)
     );
+
+CREATE INDEX idx_products_category ON products(category_guid);
+CREATE INDEX idx_products_name ON products(name);

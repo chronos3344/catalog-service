@@ -2,13 +2,11 @@ package mproduct
 
 import (
 	"context"
-	"errors"
 
 	"github.com/google/uuid"
 
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	"github.com/chronos3344/catalog-service/internal/app/repository"
-	"github.com/chronos3344/catalog-service/internal/app/service"
 )
 
 type service struct {
