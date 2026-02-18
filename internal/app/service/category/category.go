@@ -5,21 +5,21 @@ import (
 
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	"github.com/chronos3344/catalog-service/internal/app/repository"
-
+	"github.com/chronos3344/catalog-service/internal/app/service"
 	"github.com/google/uuid"
 )
 
-type service struct {
+type srv struct {
 	repoCategory repository.Category
 }
 
 func NewService(repoCategory repository.Category) service.Category {
-	return &service{
+	return &srv{
 		repoCategory: repoCategory,
 	}
 }
 
-func (s *service) Create(ctx context.Context, name string) (entity.ResponseCategoryCreate, error) {
+func (s *srv) Create(ctx context.Context, name string) (entity.ResponseCategoryCreate, error) {
 	existing, err := s.repoCategory.GetByName(ctx, name)
 	if err == nil && existing.GUID != uuid.Nil {
 		return entity.ResponseCategoryCreate{}, repository.ErrConflict
@@ -40,7 +40,7 @@ func (s *service) Create(ctx context.Context, name string) (entity.ResponseCateg
 	}, nil
 }
 
-func (s *service) Get(ctx context.Context, guid uuid.UUID) (entity.ResponseCategoryGet, error) {
+func (s *srv) Get(ctx context.Context, guid uuid.UUID) (entity.ResponseCategoryGet, error) {
 	category, err := s.repoCategory.GetByGUID(ctx, guid)
 	if err != nil {
 		return entity.ResponseCategoryGet{}, err
@@ -52,7 +52,7 @@ func (s *service) Get(ctx context.Context, guid uuid.UUID) (entity.ResponseCateg
 	}, nil
 }
 
-func (s *service) List(ctx context.Context) (entity.ResponseCategoryList, error) {
+func (s *srv) List(ctx context.Context) (entity.ResponseCategoryList, error) {
 	categories, err := s.repoCategory.List(ctx)
 	if err != nil {
 		return nil, err
@@ -68,7 +68,7 @@ func (s *service) List(ctx context.Context) (entity.ResponseCategoryList, error)
 	return response, nil
 }
 
-func (s *service) Update(ctx context.Context, guid uuid.UUID, name string) (entity.ResponseCategoryUpdate, error) {
+func (s *srv) Update(ctx context.Context, guid uuid.UUID, name string) (entity.ResponseCategoryUpdate, error) {
 	category, err := s.repoCategory.GetByGUID(ctx, guid)
 	if err != nil {
 		return entity.ResponseCategoryUpdate{}, err
@@ -92,7 +92,7 @@ func (s *service) Update(ctx context.Context, guid uuid.UUID, name string) (enti
 	}, nil
 }
 
-func (s *service) Delete(ctx context.Context, guid uuid.UUID) error {
+func (s *srv) Delete(ctx context.Context, guid uuid.UUID) error {
 	_, err := s.repoCategory.GetByGUID(ctx, guid)
 	if err != nil {
 		return err

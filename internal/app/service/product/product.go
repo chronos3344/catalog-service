@@ -3,25 +3,25 @@ package mproduct
 import (
 	"context"
 
-	"github.com/google/uuid"
-
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	"github.com/chronos3344/catalog-service/internal/app/repository"
+	"github.com/chronos3344/catalog-service/internal/app/service"
+	"github.com/google/uuid"
 )
 
-type service struct {
+type srv struct {
 	repoProduct  repository.Product
 	repoCategory repository.Category
 }
 
 func NewService(repoProduct repository.Product, repoCategory repository.Category) service.Product {
-	return &service{
+	return &srv{
 		repoProduct:  repoProduct,
 		repoCategory: repoCategory,
 	}
 }
 
-func (s *service) Create(ctx context.Context, name string, price float64, categoryGUID uuid.UUID, description *string) (entity.ResponseProductCreate, error) {
+func (s *srv) Create(ctx context.Context, name string, price float64, categoryGUID uuid.UUID, description *string) (entity.ResponseProductCreate, error) {
 	_, err := s.repoCategory.GetByGUID(ctx, categoryGUID)
 	if err != nil {
 		return entity.ResponseProductCreate{}, err
@@ -53,7 +53,7 @@ func (s *service) Create(ctx context.Context, name string, price float64, catego
 	}, nil
 }
 
-func (s *service) Get(ctx context.Context, guid uuid.UUID) (entity.ResponseProductGet, error) {
+func (s *srv) Get(ctx context.Context, guid uuid.UUID) (entity.ResponseProductGet, error) {
 	product, err := s.repoProduct.GetByGUID(ctx, guid)
 	if err != nil {
 		return entity.ResponseProductGet{}, err
@@ -68,7 +68,7 @@ func (s *service) Get(ctx context.Context, guid uuid.UUID) (entity.ResponseProdu
 	}, nil
 }
 
-func (s *service) List(ctx context.Context, filter entity.RequestProductList) (entity.ResponseProductList, error) {
+func (s *srv) List(ctx context.Context, filter entity.RequestProductList) (entity.ResponseProductList, error) {
 	if filter.CategoryGUID != nil {
 		_, err := s.repoCategory.GetByGUID(ctx, *filter.CategoryGUID)
 		if err != nil {
@@ -94,7 +94,7 @@ func (s *service) List(ctx context.Context, filter entity.RequestProductList) (e
 	return response, nil
 }
 
-func (s *service) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProductUpdate) (entity.ResponseProductUpdate, error) {
+func (s *srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProductUpdate) (entity.ResponseProductUpdate, error) {
 	product, err := s.repoProduct.GetByGUID(ctx, guid)
 	if err != nil {
 		return entity.ResponseProductUpdate{}, err
@@ -138,7 +138,7 @@ func (s *service) Update(ctx context.Context, guid uuid.UUID, req entity.Request
 	}, nil
 }
 
-func (s *service) Delete(ctx context.Context, guid uuid.UUID) error {
+func (s *srv) Delete(ctx context.Context, guid uuid.UUID) error {
 	_, err := s.repoProduct.GetByGUID(ctx, guid)
 	if err != nil {
 		return err

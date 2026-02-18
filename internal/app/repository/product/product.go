@@ -8,13 +8,17 @@ import (
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	"github.com/chronos3344/catalog-service/internal/app/repository"
 	rcpostgres "github.com/chronos3344/catalog-service/internal/app/repository/conn/postgres"
-
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 )
 
 type repoPg struct {
 	db *bun.DB
+}
+
+func (r *repoPg) GetByName(ctx context.Context, name string) (entity.Product, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func NewRepoFromPostgres(_ context.Context, d *rcpostgres.Client) (*repoPg, error) {

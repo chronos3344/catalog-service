@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	rhandler "github.com/chronos3344/catalog-service/internal/app/handler"
-
 	"github.com/gorilla/mux"
 )
 

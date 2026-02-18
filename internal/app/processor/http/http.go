@@ -7,10 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gorilla/mux"
-
 	"github.com/chronos3344/catalog-service/internal/app/config/section"
 	rhandler "github.com/chronos3344/catalog-service/internal/app/handler"
+	"github.com/gorilla/mux"
 )
 
 type httpProc struct {

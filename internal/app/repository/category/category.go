@@ -8,7 +8,6 @@ import (
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	"github.com/chronos3344/catalog-service/internal/app/repository"
 	rcpostgres "github.com/chronos3344/catalog-service/internal/app/repository/conn/postgres"
-
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 )
