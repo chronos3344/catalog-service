@@ -1,6 +1,8 @@
 package rprocessor
 
 import (
+	"net/http"
+
 	rhandler "github.com/chronos3344/catalog-service/internal/app/handler"
 	"github.com/gorilla/mux"
 )
@@ -14,7 +16,7 @@ func v1RegCategoryHandler(r1 *mux.Router, h rhandler.Category) {
 }
 
 func v1RegProductHandler(r1 *mux.Router, h rhandler.Product) {
-	reg(r1, "POST", "/product/create", h.Create)
+	reg(r1, "POST", "/product/create", http.HandlerFunc(h.Create))
 	reg(r1, "GET", "/product/{product_guid}", h.Get)
 	reg(r1, "POST", "/product/list", h.List)
 	reg(r1, "PUT", "/product/{product_guid}", h.Update)

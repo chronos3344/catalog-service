@@ -7,7 +7,6 @@ import (
 
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	"github.com/chronos3344/catalog-service/internal/app/handler"
-	"github.com/chronos3344/catalog-service/internal/app/repository"
 	"github.com/chronos3344/catalog-service/internal/app/service"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -40,7 +39,7 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.serviceCategory.Create(r.Context(), req.Name)
 	if err != nil {
-		if errors.Is(err, repository.ErrConflict) {
+		if errors.Is(err, entity.ErrCategoryAlreadyExists) {
 			http.Error(w, `{"error":"Category with this name already exists"}`, http.StatusConflict)
 			return
 		}
@@ -68,7 +67,7 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.serviceCategory.Get(r.Context(), guid)
 	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
+		if errors.Is(err, entity.ErrNotFound) {
 			http.Error(w, `{"error":"Category not found"}`, http.StatusNotFound)
 			return
 		}
@@ -125,11 +124,11 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.serviceCategory.Update(r.Context(), guid, req.Name)
 	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
+		if errors.Is(err, entity.ErrNotFound) {
 			http.Error(w, `{"error":"Category not found"}`, http.StatusNotFound)
 			return
 		}
-		if errors.Is(err, repository.ErrConflict) {
+		if errors.Is(err, entity.ErrCategoryAlreadyExists) {
 			http.Error(w, `{"error":"Category with this name already exists"}`, http.StatusConflict)
 			return
 		}
@@ -156,7 +155,7 @@ func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	err = h.serviceCategory.Delete(r.Context(), guid)
 	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
+		if errors.Is(err, entity.ErrNotFound) {
 			http.Error(w, `{"error":"Category not found"}`, http.StatusNotFound)
 			return
 		}

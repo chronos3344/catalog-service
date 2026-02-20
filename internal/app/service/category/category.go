@@ -22,7 +22,7 @@ func NewService(repoCategory repository.Category) service.Category {
 func (s *srv) Create(ctx context.Context, name string) (entity.ResponseCategoryCreate, error) {
 	existing, err := s.repoCategory.GetByName(ctx, name)
 	if err == nil && existing.GUID != uuid.Nil {
-		return entity.ResponseCategoryCreate{}, repository.ErrConflict
+		return entity.ResponseCategoryCreate{}, entity.ErrCategoryAlreadyExists
 	}
 
 	category := entity.Category{
@@ -76,7 +76,7 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, name string) (entity.R
 
 	existing, err := s.repoCategory.GetByName(ctx, name)
 	if err == nil && existing.GUID != guid && existing.GUID != uuid.Nil {
-		return entity.ResponseCategoryUpdate{}, repository.ErrConflict
+		return entity.ResponseCategoryUpdate{}, entity.ErrCategoryAlreadyExists
 	}
 
 	category.Name = name

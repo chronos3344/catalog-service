@@ -7,7 +7,6 @@ import (
 
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	"github.com/chronos3344/catalog-service/internal/app/handler"
-	"github.com/chronos3344/catalog-service/internal/app/repository"
 	"github.com/chronos3344/catalog-service/internal/app/service"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -50,11 +49,11 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.serviceProduct.Create(r.Context(), req.Name, req.Price, req.CategoryGUID, req.Description)
 	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
+		if errors.Is(err, entity.ErrNotFound) {
 			http.Error(w, `{"error":"Category not found"}`, http.StatusNotFound)
 			return
 		}
-		if errors.Is(err, repository.ErrConflict) {
+		if errors.Is(err, entity.ErrProductAlreadyExists) {
 			http.Error(w, `{"error":"Product with this name already exists"}`, http.StatusConflict)
 			return
 		}
@@ -82,7 +81,7 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.serviceProduct.Get(r.Context(), guid)
 	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
+		if errors.Is(err, entity.ErrNotFound) {
 			http.Error(w, `{"error":"Product not found"}`, http.StatusNotFound)
 			return
 		}
@@ -111,7 +110,7 @@ func (h *handler) List(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.serviceProduct.List(r.Context(), req)
 	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
+		if errors.Is(err, entity.ErrNotFound) {
 			http.Error(w, `{"error":"Category not found"}`, http.StatusNotFound)
 			return
 		}
@@ -149,11 +148,11 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.serviceProduct.Update(r.Context(), guid, req)
 	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
+		if errors.Is(err, entity.ErrNotFound) {
 			http.Error(w, `{"error":"Product not found"}`, http.StatusNotFound)
 			return
 		}
-		if errors.Is(err, repository.ErrConflict) {
+		if errors.Is(err, entity.ErrProductAlreadyExists) {
 			http.Error(w, `{"error":"Product with this name already exists"}`, http.StatusConflict)
 			return
 		}
@@ -180,7 +179,7 @@ func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	err = h.serviceProduct.Delete(r.Context(), guid)
 	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
+		if errors.Is(err, entity.ErrNotFound) {
 			http.Error(w, `{"error":"Product not found"}`, http.StatusNotFound)
 			return
 		}

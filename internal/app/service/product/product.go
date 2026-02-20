@@ -29,7 +29,7 @@ func (s *srv) Create(ctx context.Context, name string, price float64, categoryGU
 
 	existing, err := s.repoProduct.GetByName(ctx, name)
 	if err == nil && existing.GUID != uuid.Nil {
-		return entity.ResponseProductCreate{}, repository.ErrConflict
+		return entity.ResponseProductCreate{}, entity.ErrProductAlreadyExists
 	}
 
 	product := entity.Product{
@@ -103,7 +103,7 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProd
 	if req.Name != nil {
 		existing, err := s.repoProduct.GetByName(ctx, *req.Name)
 		if err == nil && existing.GUID != guid && existing.GUID != uuid.Nil {
-			return entity.ResponseProductUpdate{}, repository.ErrConflict
+			return entity.ResponseProductUpdate{}, entity.ErrProductAlreadyExists
 		}
 		product.Name = *req.Name
 	}
