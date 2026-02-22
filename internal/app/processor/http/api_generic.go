@@ -4,12 +4,12 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/chronos3344/catalog-service/internal/app/handler"
+	rhandler "github.com/chronos3344/catalog-service/internal/app/handler"
 	"github.com/gorilla/mux"
 )
 
 func vGenericRegHealthCheck(r *mux.Router, h rhandler.Health) {
-	reg(r, http.MethodGet, "/health", http.HandlerFunc(h.LastCheck))
+	reg(r, http.MethodGet, "/health", h.LastCheck)
 }
 
 func handlerNotFound(w http.ResponseWriter, _ *http.Request) {

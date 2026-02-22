@@ -1,6 +1,7 @@
 package rprocessor
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,16 +14,29 @@ import (
 
 type httpProc struct {
 	server *http.Server
-	addr   string
+	//addr   string
 }
 
-func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer) *httpProc {
+func NewHttp(hHealth rhandler.Health, hCategory rhandler.Category, hProduct rhandler.Product, cfg section.ProcessorWebServer) *httpProc {
 	r := mux.NewRouter()
-
 	r.NotFoundHandler = http.HandlerFunc(handlerNotFound)
 
-	vGenericRegHealthCheck(r, hHealth)
+	// Регистрируем health check
+	if hHealth != nil {
+		vGenericRegHealthCheck(r, hHealth)
+	}
 
+	// API version 1
+	rV1 := r.PathPrefix("/v1").Subrouter()
+
+	if hCategory != nil {
+		v1RegCategoryHandler(rV1, hCategory)
+	}
+	if hProduct != nil {
+		v1RegProductHandler(rV1, hProduct)
+	}
+
+	// Логируем все зарегистрированные маршруты
 	_ = r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 		pathTemplate, _ := route.GetPathTemplate()
 		methods, _ := route.GetMethods()
@@ -31,21 +45,25 @@ func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer) *httpProc 
 	})
 
 	addr := fmt.Sprintf(":%d", cfg.ListenPort)
-	s := &httpProc{
+
+	return &httpProc{
 		server: &http.Server{
 			Addr:              addr,
 			Handler:           r,
 			ReadHeaderTimeout: 5 * time.Second,
+			ReadTimeout:       10 * time.Second,
+			WriteTimeout:      10 * time.Second,
+			IdleTimeout:       120 * time.Second,
 		},
-		addr: addr,
-		//router: r,
 	}
-
-	log.Printf("HTTP server configured on %s", addr)
-	return s
 }
 
 func (h *httpProc) Serve() error {
-	log.Printf("Starting HTTP server on %s", h.addr)
+	log.Printf("Starting HTTP server on %s", h.server.Addr)
 	return h.server.ListenAndServe()
+}
+
+func (h *httpProc) Shutdown(ctx context.Context) error {
+	log.Println("Shutting down HTTP server...")
+	return h.server.Shutdown(ctx)
 }
