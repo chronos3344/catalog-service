@@ -8,6 +8,7 @@ import (
 )
 
 func v1RegCategoryHandler(r1 *mux.Router, h rhandler.Category) {
+	reg(r1, http.MethodPost, "/product/create", h.Create)
 	reg(r1, http.MethodPost, "/category/create", h.Create)
 	reg(r1, http.MethodGet, "/category/{category_guid}", h.Get)
 	reg(r1, http.MethodPost, "/category/list", h.List)
