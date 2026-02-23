@@ -68,7 +68,7 @@ func (s *srv) Get(ctx context.Context, guid uuid.UUID) (entity.ResponseProductGe
 	}, nil
 }
 
-func (s *srv) List(ctx context.Context, filter entity.RequestProductList) (entity.ResponseProductList, error) {
+func (s *srv) List(ctx context.Context, CategoryGUID *uuid.UUID, MinPrice *float64, MaxPrice *float64) (entity.ResponseProductList, error) {
 	if filter.CategoryGUID != nil {
 		_, err := s.repoCategory.GetByGUID(ctx, *filter.CategoryGUID)
 		if err != nil {

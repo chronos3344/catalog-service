@@ -9,7 +9,7 @@ import (
 )
 
 func vGenericRegHealthCheck(r *mux.Router, h rhandler.Health) {
-	reg(r, http.MethodGet, "/health", h.LastCheck)
+	reg(r, http.MethodGet, "/health", http.HandlerFunc(h.LastCheck))
 }
 
 func handlerNotFound(w http.ResponseWriter, _ *http.Request) {
