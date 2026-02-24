@@ -7,6 +7,7 @@ import (
 
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	rcpostgres "github.com/chronos3344/catalog-service/internal/app/repository/conn/postgres"
+
 	"github.com/google/uuid"
 )
 
@@ -14,7 +15,7 @@ type (
 	repoPg struct {
 		*_DB
 	}
-	_DB = rcpostgres.Client // Наш клиент, который мы получаем, когда инициализируем соединение с БД
+	_DB = rcpostgres.Client
 )
 
 func (r *repoPg) GetByName(ctx context.Context, name string) (entity.Product, error) {

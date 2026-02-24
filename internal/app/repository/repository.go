@@ -21,6 +21,6 @@ type Product interface {
 	GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Product, error)
 	GetByName(ctx context.Context, name string) (entity.Product, error)
 	List(ctx context.Context, filter entity.RequestProductList) ([]entity.Product, error)
-	Update(ctx context.Context, product entity.Product) (entity.Product, error)
+	Update(ctx context.Context, product entity.ResponseProductUpdate) (entity.Product, error)
 	Delete(ctx context.Context, guid uuid.UUID) error
 }

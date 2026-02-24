@@ -5,7 +5,6 @@ import (
 
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	"github.com/chronos3344/catalog-service/internal/app/repository"
-	"github.com/chronos3344/catalog-service/internal/app/service"
 	"github.com/google/uuid"
 )
 
@@ -14,7 +13,7 @@ type srv struct {
 	repoCategory repository.Category
 }
 
-func NewService(repoProduct repository.Product, repoCategory repository.Category) service.Product {
+func NewService(repoProduct *interface{}, repoCategory repository.Category) *srv {
 	return &srv{
 		repoProduct:  repoProduct,
 		repoCategory: repoCategory,
@@ -30,6 +29,9 @@ func (s *srv) Create(ctx context.Context, name string, price float64, categoryGU
 	existing, err := s.repoProduct.GetByName(ctx, name)
 	if err == nil && existing.GUID != uuid.Nil {
 		return entity.ResponseProductCreate{}, entity.ErrProductAlreadyExists
+	}
+	if err != nil {
+		return entity.ResponseProductCreate{}, err
 	}
 
 	product := entity.Product{
@@ -68,15 +70,21 @@ func (s *srv) Get(ctx context.Context, guid uuid.UUID) (entity.ResponseProductGe
 	}, nil
 }
 
-func (s *srv) List(ctx context.Context, CategoryGUID *uuid.UUID, MinPrice *float64, MaxPrice *float64) (entity.ResponseProductList, error) {
-	if filter.CategoryGUID != nil {
-		_, err := s.repoCategory.GetByGUID(ctx, *filter.CategoryGUID)
+func (s *srv) List(ctx context.Context, categoryGUID *uuid.UUID, minPrice *float64, maxPrice *float64) (entity.ResponseProductList, error) {
+	if categoryGUID != nil {
+		_, err := s.repoCategory.GetByGUID(ctx, *categoryGUID)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	products, err := s.repoProduct.List(ctx, filter)
+	product := entity.RequestProductList{
+		CategoryGUID: categoryGUID,
+		MinPrice:     minPrice,
+		MaxPrice:     maxPrice,
+	}
+
+	products, err := s.repoProduct.List(ctx, product)
 	if err != nil {
 		return nil, err
 	}
@@ -94,34 +102,41 @@ func (s *srv) List(ctx context.Context, CategoryGUID *uuid.UUID, MinPrice *float
 	return response, nil
 }
 
-func (s *srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProductUpdate) (entity.ResponseProductUpdate, error) {
-	product, err := s.repoProduct.GetByGUID(ctx, guid)
+func (s *srv) Update(ctx context.Context, guid uuid.UUID, name *string, price *float64, categoryGUID *uuid.UUID, description *string) (entity.ResponseProductUpdate, error) {
+	_, err := s.repoProduct.GetByGUID(ctx, guid)
 	if err != nil {
 		return entity.ResponseProductUpdate{}, err
 	}
 
-	if req.Name != nil {
-		existing, err := s.repoProduct.GetByName(ctx, *req.Name)
+	product := entity.ResponseProductUpdate{
+		GUID: guid,
+	}
+
+	if name != nil {
+		existing, err := s.repoProduct.GetByName(ctx, *name)
 		if err == nil && existing.GUID != guid && existing.GUID != uuid.Nil {
 			return entity.ResponseProductUpdate{}, entity.ErrProductAlreadyExists
 		}
-		product.Name = *req.Name
-	}
-
-	if req.Price != nil {
-		product.Price = *req.Price
-	}
-
-	if req.CategoryGUID != nil {
-		_, err := s.repoCategory.GetByGUID(ctx, *req.CategoryGUID)
 		if err != nil {
 			return entity.ResponseProductUpdate{}, err
 		}
-		product.CategoryGUID = *req.CategoryGUID
+		product.Name = *name
 	}
 
-	if req.Description != nil {
-		product.Description = req.Description
+	if price != nil {
+		product.Price = *price
+	}
+
+	if categoryGUID != nil {
+		_, err := s.repoCategory.GetByGUID(ctx, *categoryGUID)
+		if err != nil {
+			return entity.ResponseProductUpdate{}, err
+		}
+		product.CategoryGUID = *categoryGUID
+	}
+
+	if description != nil {
+		product.Description = description
 	}
 
 	updated, err := s.repoProduct.Update(ctx, product)

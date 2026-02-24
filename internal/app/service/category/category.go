@@ -78,6 +78,9 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, name string) (entity.R
 	if err == nil && existing.GUID != guid && existing.GUID != uuid.Nil {
 		return entity.ResponseCategoryUpdate{}, entity.ErrCategoryAlreadyExists
 	}
+	if err != nil {
+		return entity.ResponseCategoryUpdate{}, err
+	}
 
 	category.Name = name
 
