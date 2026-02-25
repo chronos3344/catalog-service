@@ -13,7 +13,7 @@ type srv struct {
 	repoCategory repository.Category
 }
 
-func NewService(repoProduct *interface{}, repoCategory repository.Category) *srv {
+func NewService(repoProduct repository.Product, repoCategory repository.Category) *srv {
 	return &srv{
 		repoProduct:  repoProduct,
 		repoCategory: repoCategory,

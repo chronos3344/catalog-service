@@ -5,10 +5,12 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/google/uuid"
+
+	"github.com/chronos3344/catalog-service/internal/app/repository"
+
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	rcpostgres "github.com/chronos3344/catalog-service/internal/app/repository/conn/postgres"
-
-	"github.com/google/uuid"
 )
 
 type (
@@ -23,7 +25,7 @@ func (r *repoPg) GetByName(ctx context.Context, name string) (entity.Product, er
 	panic("implement me")
 }
 
-func NewRepoFromPostgres(_ context.Context, d *rcpostgres.Client) (*repoPg, error) {
+func NewRepoFromPostgres(_ context.Context, d *rcpostgres.Client) (repository.Product, error) {
 	return &repoPg{_DB: d}, nil
 }
 
@@ -72,11 +74,11 @@ func (r *repoPg) List(ctx context.Context, filter entity.RequestProductList) ([]
 	}
 
 	var products []entity.Product
-	err := query.Order("created_at DESC").Scan(ctx)
+	err := query.Order("created_at DESC").Scan(ctx, &products)
 	return products, err
 }
 
-func (r *repoPg) Update(ctx context.Context, product entity.Product) (entity.Product, error) {
+func (r *repoPg) Update(ctx context.Context, product entity.ResponseProductUpdate) (entity.ResponseProductUpdate, error) {
 	_, err := r._DB.NewUpdate().Model(&product).WherePK().Exec(ctx)
 	return product, err
 }
