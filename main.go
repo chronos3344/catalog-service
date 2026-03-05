@@ -12,7 +12,7 @@ import (
 	hcategory "github.com/chronos3344/catalog-service/internal/app/handler/category"
 	rhealth "github.com/chronos3344/catalog-service/internal/app/handler/health"
 	hproduct "github.com/chronos3344/catalog-service/internal/app/handler/product"
-	rprocessor "github.com/chronos3344/catalog-service/internal/app/processor/http"
+	"github.com/chronos3344/catalog-service/internal/app/processor/http"
 	pcategory "github.com/chronos3344/catalog-service/internal/app/repository/category"
 	rcpostgres "github.com/chronos3344/catalog-service/internal/app/repository/conn/postgres"
 	pproduct "github.com/chronos3344/catalog-service/internal/app/repository/product"

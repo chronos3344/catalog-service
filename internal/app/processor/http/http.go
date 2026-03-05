@@ -14,7 +14,7 @@ import (
 
 type httpProc struct {
 	server *http.Server
-	addr   string
+	//addr   string
 }
 
 func NewHttp(hHealth rhandler.Health, hCategory rhandler.Category, hProduct rhandler.Product, cfg section.ProcessorWebServer) *httpProc {

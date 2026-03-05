@@ -2,6 +2,7 @@ package mcategory
 
 import (
 	"context"
+	"errors"
 
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	"github.com/chronos3344/catalog-service/internal/app/repository"
@@ -23,6 +24,9 @@ func (s *srv) Create(ctx context.Context, name string) (entity.ResponseCategoryC
 	existing, err := s.repoCategory.GetByName(ctx, name)
 	if err == nil && existing.GUID != uuid.Nil {
 		return entity.ResponseCategoryCreate{}, entity.ErrCategoryAlreadyExists
+	}
+	if err != nil && !errors.Is(err, entity.ErrNotFound) {
+		return entity.ResponseCategoryCreate{}, err
 	}
 
 	category := entity.Category{
@@ -69,22 +73,26 @@ func (s *srv) List(ctx context.Context) (entity.ResponseCategoryList, error) {
 }
 
 func (s *srv) Update(ctx context.Context, guid uuid.UUID, name string) (entity.ResponseCategoryUpdate, error) {
+	// Получаем существующую категорию
 	category, err := s.repoCategory.GetByGUID(ctx, guid)
 	if err != nil {
 		return entity.ResponseCategoryUpdate{}, err
 	}
 
+	// Проверяем уникальность нового имени
 	existing, err := s.repoCategory.GetByName(ctx, name)
 	if err == nil && existing.GUID != guid && existing.GUID != uuid.Nil {
 		return entity.ResponseCategoryUpdate{}, entity.ErrCategoryAlreadyExists
 	}
-	if err != nil {
+	if err != nil && !errors.Is(err, entity.ErrNotFound) {
 		return entity.ResponseCategoryUpdate{}, err
 	}
 
+	// Обновляем имя
 	category.Name = name
 
-	updated, err := s.repoCategory.Update(ctx, category)
+	// Сохраняем изменения - здесь используем var, так как err уже объявлена выше
+	var updated, _ = s.repoCategory.Update(ctx, category)
 	if err != nil {
 		return entity.ResponseCategoryUpdate{}, err
 	}
@@ -96,10 +104,5 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, name string) (entity.R
 }
 
 func (s *srv) Delete(ctx context.Context, guid uuid.UUID) error {
-	_, err := s.repoCategory.GetByGUID(ctx, guid)
-	if err != nil {
-		return err
-	}
-
 	return s.repoCategory.Delete(ctx, guid)
 }

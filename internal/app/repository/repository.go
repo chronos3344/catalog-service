@@ -17,10 +17,11 @@ type Category interface {
 }
 
 type Product interface {
-	Create(ctx context.Context, name string, price float64, categoryGUID uuid.UUID, description *string) (entity.Product, error)
+	Create(ctx context.Context, product entity.Product) (entity.Product, error)
 	GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Product, error)
 	GetByName(ctx context.Context, name string) (entity.Product, error)
-	List(ctx context.Context, categoryGUID *uuid.UUID, minPrice *float64, maxPrice *float64) ([]entity.Product, error)
-	Update(ctx context.Context, guid uuid.UUID, name *string, price *float64, categoryGUID *uuid.UUID, description *string) (entity.ResponseProductUpdate, error)
+	GetByNameAndCategory(ctx context.Context, name string, categoryGUID uuid.UUID) (entity.Product, error)
+	List(ctx context.Context, filter entity.RequestProductList) ([]entity.Product, error)
+	Update(ctx context.Context, product entity.Product) (entity.Product, error)
 	Delete(ctx context.Context, guid uuid.UUID) error
 }

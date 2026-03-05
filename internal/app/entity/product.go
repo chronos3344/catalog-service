@@ -12,7 +12,7 @@ type Product struct {
 
 	ID           int64     `bun:"id,pk,autoincrement" json:"id"`
 	GUID         uuid.UUID `bun:"guid,type:uuid,pk,default:gen_random_uuid()" json:"guid"`
-	Name         string    `bun:"name,notnull,unique" json:"name"`
+	Name         string    `bun:"name,notnull" json:"name"`
 	Description  *string   `bun:"description" json:"description"`
 	Price        float64   `bun:"price,type:decimal(12,3),notnull" json:"price"`
 	CategoryGUID uuid.UUID `bun:"category_guid,type:uuid,notnull" json:"category_guid"`

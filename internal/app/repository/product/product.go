@@ -5,12 +5,10 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/google/uuid"
-
-	"github.com/chronos3344/catalog-service/internal/app/repository"
-
 	"github.com/chronos3344/catalog-service/internal/app/entity"
+	"github.com/chronos3344/catalog-service/internal/app/repository"
 	rcpostgres "github.com/chronos3344/catalog-service/internal/app/repository/conn/postgres"
+	"github.com/google/uuid"
 )
 
 type (
@@ -21,8 +19,17 @@ type (
 )
 
 func (r *repoPg) GetByName(ctx context.Context, name string) (entity.Product, error) {
-	//TODO implement me
-	panic("implement me")
+	var product entity.Product
+	err := r._DB.NewSelect().Model(&product).
+		Where("name = ?", name).
+		Scan(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return entity.Product{}, entity.ErrNotFound
+		}
+		return entity.Product{}, err
+	}
+	return product, nil
 }
 
 func NewRepoFromPostgres(_ context.Context, d *rcpostgres.Client) (repository.Product, error) {
@@ -52,8 +59,8 @@ func (r *repoPg) GetByNameAndCategory(ctx context.Context, name string, category
 		Where("name = ? AND category_guid = ?", name, categoryGUID).
 		Scan(ctx)
 	if err != nil {
-		if errors.Is(err, entity.ErrNotFound) {
-			return entity.Product{}, nil
+		if errors.Is(err, sql.ErrNoRows) {
+			return entity.Product{}, entity.ErrNotFound
 		}
 		return entity.Product{}, err
 	}
@@ -78,7 +85,7 @@ func (r *repoPg) List(ctx context.Context, filter entity.RequestProductList) ([]
 	return products, err
 }
 
-func (r *repoPg) Update(ctx context.Context, product entity.ResponseProductUpdate) (entity.ResponseProductUpdate, error) {
+func (r *repoPg) Update(ctx context.Context, product entity.Product) (entity.Product, error) {
 	_, err := r._DB.NewUpdate().Model(&product).WherePK().Exec(ctx)
 	return product, err
 }

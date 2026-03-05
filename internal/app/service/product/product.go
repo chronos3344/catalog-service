@@ -2,6 +2,7 @@ package mproduct
 
 import (
 	"context"
+	"errors"
 
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	"github.com/chronos3344/catalog-service/internal/app/repository"
@@ -20,25 +21,18 @@ func NewService(repoProduct repository.Product, repoCategory repository.Category
 	}
 }
 
-func (s *srv) Create(ctx context.Context, name string, price float64, categoryGUID uuid.UUID, description *string) (entity.ResponseProductCreate, error) {
-	_, err := s.repoCategory.GetByGUID(ctx, categoryGUID)
+func (s *srv) Create(ctx context.Context, product entity.Product) (entity.ResponseProductCreate, error) {
+	_, err := s.repoCategory.GetByGUID(ctx, product.CategoryGUID)
 	if err != nil {
 		return entity.ResponseProductCreate{}, err
 	}
 
-	existing, err := s.repoProduct.GetByName(ctx, name)
+	existing, err := s.repoProduct.GetByNameAndCategory(ctx, product.Name, product.CategoryGUID)
 	if err == nil && existing.GUID != uuid.Nil {
 		return entity.ResponseProductCreate{}, entity.ErrProductAlreadyExists
 	}
-	if err != nil {
+	if err != nil && !errors.Is(err, entity.ErrNotFound) {
 		return entity.ResponseProductCreate{}, err
-	}
-
-	product := entity.Product{
-		Name:         name,
-		Price:        price,
-		CategoryGUID: categoryGUID,
-		Description:  description,
 	}
 
 	created, err := s.repoProduct.Create(ctx, product)
@@ -70,21 +64,15 @@ func (s *srv) Get(ctx context.Context, guid uuid.UUID) (entity.ResponseProductGe
 	}, nil
 }
 
-func (s *srv) List(ctx context.Context, categoryGUID *uuid.UUID, minPrice *float64, maxPrice *float64) (entity.ResponseProductList, error) {
-	if categoryGUID != nil {
-		_, err := s.repoCategory.GetByGUID(ctx, *categoryGUID)
+func (s *srv) List(ctx context.Context, filter entity.RequestProductList) (entity.ResponseProductList, error) {
+	if filter.CategoryGUID != nil {
+		_, err := s.repoCategory.GetByGUID(ctx, *filter.CategoryGUID)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	product := entity.RequestProductList{
-		CategoryGUID: categoryGUID,
-		MinPrice:     minPrice,
-		MaxPrice:     maxPrice,
-	}
-
-	products, err := s.repoProduct.List(ctx, product)
+	products, err := s.repoProduct.List(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -102,48 +90,65 @@ func (s *srv) List(ctx context.Context, categoryGUID *uuid.UUID, minPrice *float
 	return response, nil
 }
 
-func (s *srv) Update(ctx context.Context, guid uuid.UUID, name *string, price *float64, categoryGUID *uuid.UUID, description *string) (entity.ResponseProductUpdate, error) {
-	_, err := s.repoProduct.GetByGUID(ctx, guid)
+func (s *srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProductUpdate) (entity.ResponseProductUpdate, error) {
+	// Получаем существующий продукт
+	existingProduct, err := s.repoProduct.GetByGUID(ctx, guid)
 	if err != nil {
+		if errors.Is(err, entity.ErrNotFound) {
+			return entity.ResponseProductUpdate{}, entity.ErrNotFound
+		}
 		return entity.ResponseProductUpdate{}, err
 	}
 
-	product := entity.ResponseProductUpdate{
-		GUID: guid,
-	}
-
-	if name != nil {
-		existing, err := s.repoProduct.GetByName(ctx, *name)
+	// Проверяем уникальность имени, если оно изменяется
+	if req.Name != nil && *req.Name != existingProduct.Name {
+		existing, err := s.repoProduct.GetByName(ctx, *req.Name)
 		if err == nil && existing.GUID != guid && existing.GUID != uuid.Nil {
 			return entity.ResponseProductUpdate{}, entity.ErrProductAlreadyExists
 		}
+		if err != nil && !errors.Is(err, entity.ErrNotFound) {
+			return entity.ResponseProductUpdate{}, err
+		}
+	}
+
+	// Проверяем существование категории, если она изменяется
+	if req.CategoryGUID != nil && *req.CategoryGUID != existingProduct.CategoryGUID {
+		_, err := s.repoCategory.GetByGUID(ctx, *req.CategoryGUID)
 		if err != nil {
 			return entity.ResponseProductUpdate{}, err
 		}
-		product.Name = *name
 	}
 
-	if price != nil {
-		product.Price = *price
+	// Создаем объект Product для обновления (не ResponseProductUpdate!)
+	productToUpdate := entity.Product{
+		GUID:         guid,
+		Name:         existingProduct.Name,
+		Price:        existingProduct.Price,
+		CategoryGUID: existingProduct.CategoryGUID,
+		Description:  existingProduct.Description,
 	}
 
-	if categoryGUID != nil {
-		_, err := s.repoCategory.GetByGUID(ctx, *categoryGUID)
-		if err != nil {
-			return entity.ResponseProductUpdate{}, err
-		}
-		product.CategoryGUID = *categoryGUID
+	// Обновляем только те поля, которые были переданы
+	if req.Name != nil {
+		productToUpdate.Name = *req.Name
+	}
+	if req.Price != nil {
+		productToUpdate.Price = *req.Price
+	}
+	if req.CategoryGUID != nil {
+		productToUpdate.CategoryGUID = *req.CategoryGUID
+	}
+	if req.Description != nil {
+		productToUpdate.Description = req.Description
 	}
 
-	if description != nil {
-		product.Description = description
-	}
-
-	updated, err := s.repoProduct.Update(ctx, product)
+	// Вызываем репозиторий с правильным типом
+	updated, err := s.repoProduct.Update(ctx, productToUpdate)
 	if err != nil {
 		return entity.ResponseProductUpdate{}, err
 	}
 
+	// Возвращаем ответ
 	return entity.ResponseProductUpdate{
 		GUID:         updated.GUID,
 		Name:         updated.Name,
