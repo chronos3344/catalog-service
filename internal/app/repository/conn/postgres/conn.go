@@ -41,6 +41,7 @@ func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, erro
 	u.RawQuery = args.Encode()
 
 	dsn := u.String()
+	fmt.Printf("PostgreSQL connection URL: %s\n", dsn)
 
 	fmt.Printf("PostgreSQL connection timeouts - Read: %v, Write: %v\n",
 		cfg.ReadTimeout, cfg.WriteTimeout)
