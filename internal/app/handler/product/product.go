@@ -47,7 +47,7 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.serviceProduct.Create(r.Context(), req.Price, req.CategoryGUID, req.Description)
+	resp, err := h.serviceProduct.Create(r.Context(), req)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
 			http.Error(w, `{"error":"Category not found"}`, http.StatusNotFound)
