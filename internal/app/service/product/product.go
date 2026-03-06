@@ -91,71 +91,113 @@ func (s *srv) List(ctx context.Context, filter entity.RequestProductList) (entit
 }
 
 func (s *srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProductUpdate) (entity.ResponseProductUpdate, error) {
-	// Получаем существующий продукт
-	existingProduct, err := s.repoProduct.GetByGUID(ctx, guid)
+	// Шаг 1: Получаем существующий продукт
+	existingProduct, err := s.getProductForUpdate(ctx, guid)
 	if err != nil {
-		if errors.Is(err, entity.ErrNotFound) {
-			return entity.ResponseProductUpdate{}, entity.ErrNotFound
-		}
 		return entity.ResponseProductUpdate{}, err
 	}
 
-	// Проверяем уникальность имени, если оно изменяется
-	if req.Name != nil && *req.Name != existingProduct.Name {
-		existing, err := s.repoProduct.GetByName(ctx, *req.Name)
-		if err == nil && existing.GUID != guid && existing.GUID != uuid.Nil {
-			return entity.ResponseProductUpdate{}, entity.ErrProductAlreadyExists
-		}
-		if err != nil && !errors.Is(err, entity.ErrNotFound) {
-			return entity.ResponseProductUpdate{}, err
-		}
+	// Шаг 2: Проверяем уникальность имени
+	if err := s.checkNameUniqueness(ctx, guid, existingProduct.Name, req.Name); err != nil {
+		return entity.ResponseProductUpdate{}, err
 	}
 
-	// Проверяем существование категории, если она изменяется
-	if req.CategoryGUID != nil && *req.CategoryGUID != existingProduct.CategoryGUID {
-		_, err := s.repoCategory.GetByGUID(ctx, *req.CategoryGUID)
-		if err != nil {
-			return entity.ResponseProductUpdate{}, err
-		}
+	// Шаг 3: Проверяем существование категории
+	if err := s.checkCategoryExists(ctx, existingProduct.CategoryGUID, req.CategoryGUID); err != nil {
+		return entity.ResponseProductUpdate{}, err
 	}
 
-	// Создаем объект Product для обновления (не ResponseProductUpdate!)
-	productToUpdate := entity.Product{
-		GUID:         guid,
-		Name:         existingProduct.Name,
-		Price:        existingProduct.Price,
-		CategoryGUID: existingProduct.CategoryGUID,
-		Description:  existingProduct.Description,
-	}
+	// Шаг 4: Применяем обновления
+	productToUpdate := s.buildProductForUpdate(guid, existingProduct, req)
 
-	// Обновляем только те поля, которые были переданы
-	if req.Name != nil {
-		productToUpdate.Name = *req.Name
-	}
-	if req.Price != nil {
-		productToUpdate.Price = *req.Price
-	}
-	if req.CategoryGUID != nil {
-		productToUpdate.CategoryGUID = *req.CategoryGUID
-	}
-	if req.Description != nil {
-		productToUpdate.Description = req.Description
-	}
-
-	// Вызываем репозиторий с правильным типом
+	// Шаг 5: Сохраняем
 	updated, err := s.repoProduct.Update(ctx, productToUpdate)
 	if err != nil {
 		return entity.ResponseProductUpdate{}, err
 	}
 
-	// Возвращаем ответ
+	// Шаг 6: Формируем ответ
+	return s.buildUpdateResponse(updated), nil
+}
+
+// getProductForUpdate получает продукт для обновления
+func (s *srv) getProductForUpdate(ctx context.Context, guid uuid.UUID) (*entity.Product, error) {
+	product, err := s.repoProduct.GetByGUID(ctx, guid)
+	if err != nil {
+		if errors.Is(err, entity.ErrNotFound) {
+			return nil, entity.ErrNotFound
+		}
+		return nil, err
+	}
+	return &product, nil
+}
+
+// checkNameUniqueness проверяет уникальность имени при изменении
+func (s *srv) checkNameUniqueness(ctx context.Context, guid uuid.UUID, oldName string, newName *string) error {
+	if newName == nil || *newName == oldName {
+		return nil
+	}
+
+	existing, err := s.repoProduct.GetByName(ctx, *newName)
+	if err != nil {
+		if errors.Is(err, entity.ErrNotFound) {
+			return nil // имя уникально
+		}
+		return err
+	}
+
+	if existing.GUID != guid && existing.GUID != uuid.Nil {
+		return entity.ErrProductAlreadyExists
+	}
+
+	return nil
+}
+
+// checkCategoryExists проверяет существование категории при изменении
+func (s *srv) checkCategoryExists(ctx context.Context, oldCategoryGUID uuid.UUID, newCategoryGUID *uuid.UUID) error {
+	if newCategoryGUID == nil || *newCategoryGUID == oldCategoryGUID {
+		return nil
+	}
+
+	_, err := s.repoCategory.GetByGUID(ctx, *newCategoryGUID)
+	return err
+}
+
+// buildProductForUpdate создает объект продукта для обновления
+func (s *srv) buildProductForUpdate(guid uuid.UUID, existing *entity.Product, req entity.RequestProductUpdate) entity.Product {
+	product := entity.Product{
+		GUID:         guid,
+		Name:         existing.Name,
+		Price:        existing.Price,
+		CategoryGUID: existing.CategoryGUID,
+		Description:  existing.Description,
+	}
+
+	if req.Name != nil {
+		product.Name = *req.Name
+	}
+	if req.Price != nil {
+		product.Price = *req.Price
+	}
+	if req.CategoryGUID != nil {
+		product.CategoryGUID = *req.CategoryGUID
+	}
+	if req.Description != nil {
+		product.Description = req.Description
+	}
+
+	return product
+}
+
+// buildUpdateResponse формирует ответ
+func (s *srv) buildUpdateResponse(updated entity.Product) entity.ResponseProductUpdate {
 	return entity.ResponseProductUpdate{
 		GUID:         updated.GUID,
 		Name:         updated.Name,
 		Price:        updated.Price,
 		CategoryGUID: updated.CategoryGUID,
 		Description:  updated.Description,
-	}, nil
+	}
 }
 
 func (s *srv) Delete(ctx context.Context, guid uuid.UUID) error {

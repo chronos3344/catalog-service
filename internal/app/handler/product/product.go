@@ -22,6 +22,7 @@ func NewHandler(serviceProduct service.Product) rhandler.Product {
 
 func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req entity.RequestProductCreate
+	var req2 entity.Product
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, `{"error":"Invalid request format"}`, http.StatusBadRequest)
 		return
@@ -47,7 +48,7 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.serviceProduct.Create(r.Context(), req)
+	resp, err := h.serviceProduct.Create(r.Context(), req2)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
 			http.Error(w, `{"error":"Category not found"}`, http.StatusNotFound)
