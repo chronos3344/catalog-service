@@ -39,17 +39,17 @@ func (r *repoPg) GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Category
 	return category, nil
 }
 
-func (r *repoPg) GetByName(ctx context.Context, name string) (entity.Category, error) {
-	var category entity.Category
-	err := r._DB.NewSelect().Model(&category).Where("name = ?", name).Scan(ctx)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return entity.Category{}, entity.ErrNotFound
-		}
-		return entity.Category{}, err
-	}
-	return category, nil
-}
+//func (r *repoPg) GetByName(ctx context.Context, name string) (entity.Category, error) {
+//	var category entity.Category
+//	err := r._DB.NewSelect().Model(&category).Where("name = ?", name).Scan(ctx)
+//	if err != nil {
+//		if errors.Is(err, sql.ErrNoRows) {
+//			return entity.Category{}, entity.ErrNotFound
+//		}
+//		return entity.Category{}, err
+//	}
+//	return category, nil
+//}
 
 func (r *repoPg) List(ctx context.Context) ([]entity.Category, error) {
 	var categories []entity.Category

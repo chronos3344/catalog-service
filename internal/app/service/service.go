@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	"github.com/google/uuid"
 )

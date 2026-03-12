@@ -64,6 +64,7 @@ type RequestProductList struct {
 	CategoryGUID *uuid.UUID `json:"category_guid"`
 	MinPrice     *float64   `json:"min_price"`
 	MaxPrice     *float64   `json:"max_price"`
+	Name         *string    `json:"name"`
 }
 
 type ResponseProductList []ResponseProductGet

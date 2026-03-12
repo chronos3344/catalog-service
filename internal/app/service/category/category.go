@@ -21,7 +21,7 @@ func NewService(repoCategory repository.Category) service.Category {
 }
 
 func (s *srv) Create(ctx context.Context, name string) (entity.ResponseCategoryCreate, error) {
-	existing, err := s.repoCategory.GetByName(ctx, name)
+	existing, err := s.repoCategory.List(ctx)
 	if err == nil && existing.GUID != uuid.Nil {
 		return entity.ResponseCategoryCreate{}, entity.ErrCategoryAlreadyExists
 	}
@@ -80,13 +80,13 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, name string) (entity.R
 	}
 
 	// Проверяем уникальность нового имени
-	existing, err := s.repoCategory.GetByName(ctx, name)
-	if err == nil && existing.GUID != guid && existing.GUID != uuid.Nil {
-		return entity.ResponseCategoryUpdate{}, entity.ErrCategoryAlreadyExists
-	}
-	if err != nil && !errors.Is(err, entity.ErrNotFound) {
-		return entity.ResponseCategoryUpdate{}, err
-	}
+	//existing, err := s.repoCategory.GetByName(ctx, name)
+	//if err == nil && existing.GUID != guid && existing.GUID != uuid.Nil {
+	//	return entity.ResponseCategoryUpdate{}, entity.ErrCategoryAlreadyExists
+	//}
+	//if err != nil && !errors.Is(err, entity.ErrNotFound) {
+	//	return entity.ResponseCategoryUpdate{}, err
+	//}
 
 	// Обновляем имя
 	category.Name = name

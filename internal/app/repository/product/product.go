@@ -18,20 +18,6 @@ type (
 	_DB = rcpostgres.Client
 )
 
-func (r *repoPg) GetByName(ctx context.Context, name string) (entity.Product, error) {
-	var product entity.Product
-	err := r._DB.NewSelect().Model(&product).
-		Where("name = ?", name).
-		Scan(ctx)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return entity.Product{}, entity.ErrNotFound
-		}
-		return entity.Product{}, err
-	}
-	return product, nil
-}
-
 func NewRepoFromPostgres(_ context.Context, d *rcpostgres.Client) (repository.Product, error) {
 	return &repoPg{_DB: d}, nil
 }
@@ -53,23 +39,12 @@ func (r *repoPg) GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Product,
 	return product, nil
 }
 
-func (r *repoPg) GetByNameAndCategory(ctx context.Context, name string, categoryGUID uuid.UUID) (entity.Product, error) {
-	var product entity.Product
-	err := r._DB.NewSelect().Model(&product).
-		Where("name = ? AND category_guid = ?", name, categoryGUID).
-		Scan(ctx)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return entity.Product{}, entity.ErrNotFound
-		}
-		return entity.Product{}, err
-	}
-	return product, nil
-}
-
 func (r *repoPg) List(ctx context.Context, filter entity.RequestProductList) ([]entity.Product, error) {
 	query := r._DB.NewSelect().Model(&entity.Product{})
 
+	if filter.Name != nil {
+		query = query.Where("name = ?", *filter.Name)
+	}
 	if filter.CategoryGUID != nil {
 		query = query.Where("category_guid = ?", *filter.CategoryGUID)
 	}

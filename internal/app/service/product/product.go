@@ -27,12 +27,17 @@ func (s *srv) Create(ctx context.Context, product entity.Product) (entity.Respon
 		return entity.ResponseProductCreate{}, err
 	}
 
-	existing, err := s.repoProduct.GetByNameAndCategory(ctx, product.Name, product.CategoryGUID)
-	if err == nil && existing.GUID != uuid.Nil {
-		return entity.ResponseProductCreate{}, entity.ErrProductAlreadyExists
+	filter := entity.RequestProductList{
+		CategoryGUID: &product.CategoryGUID,
+		Name:         &product.Name,
 	}
-	if err != nil && !errors.Is(err, entity.ErrNotFound) {
+
+	existingList, err := s.repoProduct.List(ctx, filter)
+	if err != nil {
 		return entity.ResponseProductCreate{}, err
+	}
+	if len(existingList) > 0 {
+		return entity.ResponseProductCreate{}, entity.ErrProductAlreadyExists
 	}
 
 	created, err := s.repoProduct.Create(ctx, product)
@@ -98,7 +103,7 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProd
 	}
 
 	// Шаг 2: Проверяем уникальность имени
-	if err := s.checkNameUniqueness(ctx, guid, existingProduct.Name, req.Name); err != nil {
+	if err := s.checkNameUniqueness(ctx, guid, existingProduct.Name, req.Name, existingProduct.CategoryGUID, req.CategoryGUID); err != nil {
 		return entity.ResponseProductUpdate{}, err
 	}
 
@@ -133,23 +138,32 @@ func (s *srv) getProductForUpdate(ctx context.Context, guid uuid.UUID) (*entity.
 }
 
 // checkNameUniqueness проверяет уникальность имени при изменении
-func (s *srv) checkNameUniqueness(ctx context.Context, guid uuid.UUID, oldName string, newName *string) error {
+func (s *srv) checkNameUniqueness(ctx context.Context, guid uuid.UUID, oldName string, newName *string, oldCategoryGUID uuid.UUID, newCategoryGUID *uuid.UUID) error {
 	if newName == nil || *newName == oldName {
 		return nil
 	}
 
-	existing, err := s.repoProduct.GetByName(ctx, *newName)
+	// Определяем категорию, в которой проверяем уникальность
+	categoryGUID := oldCategoryGUID
+	if newCategoryGUID != nil {
+		categoryGUID = *newCategoryGUID
+	}
+
+	filter := entity.RequestProductList{
+		CategoryGUID: &categoryGUID,
+		Name:         newName,
+	}
+	existingList, err := s.repoProduct.List(ctx, filter)
 	if err != nil {
-		if errors.Is(err, entity.ErrNotFound) {
-			return nil // имя уникально
-		}
 		return err
 	}
 
-	if existing.GUID != guid && existing.GUID != uuid.Nil {
-		return entity.ErrProductAlreadyExists
+	// Если нашли продукт с таким же именем в той же категории, и это не текущий продукт — ошибка
+	for _, p := range existingList {
+		if p.GUID != guid {
+			return entity.ErrProductAlreadyExists
+		}
 	}
-
 	return nil
 }
 
