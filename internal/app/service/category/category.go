@@ -20,13 +20,17 @@ func NewService(repoCategory repository.Category) service.Category {
 	}
 }
 
-func (s *srv) Create(ctx context.Context, name string) (entity.ResponseCategoryCreate, error) {
-	existing, err := s.repoCategory.List(ctx)
-	if err == nil && existing.GUID != uuid.Nil {
-		return entity.ResponseCategoryCreate{}, entity.ErrCategoryAlreadyExists
-	}
+func (s *srv) Create(ctx context.Context, name string) (entity.Category, error) {
+	// Проверяем существование категории с таким именем
+	categories, err := s.repoCategory.List(ctx)
 	if err != nil && !errors.Is(err, entity.ErrNotFound) {
-		return entity.ResponseCategoryCreate{}, err
+		return entity.Category{}, err
+	}
+
+	for _, cat := range categories {
+		if cat.Name == name {
+			return entity.Category{}, entity.ErrCategoryAlreadyExists
+		}
 	}
 
 	category := entity.Category{
@@ -35,72 +39,59 @@ func (s *srv) Create(ctx context.Context, name string) (entity.ResponseCategoryC
 
 	created, err := s.repoCategory.Create(ctx, category)
 	if err != nil {
-		return entity.ResponseCategoryCreate{}, err
+		return entity.Category{}, err
 	}
 
-	return entity.ResponseCategoryCreate{
-		GUID: created.GUID,
-		Name: created.Name,
-	}, nil
+	return created, nil
 }
 
-func (s *srv) Get(ctx context.Context, guid uuid.UUID) (entity.ResponseCategoryGet, error) {
+func (s *srv) Get(ctx context.Context, guid uuid.UUID) (entity.Category, error) {
 	category, err := s.repoCategory.GetByGUID(ctx, guid)
 	if err != nil {
-		return entity.ResponseCategoryGet{}, err
+		return entity.Category{}, err
 	}
 
-	return entity.ResponseCategoryGet{
-		GUID: category.GUID,
-		Name: category.Name,
-	}, nil
+	return category, nil
 }
 
-func (s *srv) List(ctx context.Context) (entity.ResponseCategoryList, error) {
+func (s *srv) List(ctx context.Context) ([]entity.Category, error) {
 	categories, err := s.repoCategory.List(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var response entity.ResponseCategoryList
-	for _, cat := range categories {
-		response = append(response, entity.ResponseCategoryGet{
-			GUID: cat.GUID,
-			Name: cat.Name,
-		})
-	}
-	return response, nil
+	return categories, nil
 }
 
-func (s *srv) Update(ctx context.Context, guid uuid.UUID, name string) (entity.ResponseCategoryUpdate, error) {
+func (s *srv) Update(ctx context.Context, guid uuid.UUID, name string) (entity.Category, error) {
 	// Получаем существующую категорию
 	category, err := s.repoCategory.GetByGUID(ctx, guid)
 	if err != nil {
-		return entity.ResponseCategoryUpdate{}, err
+		return entity.Category{}, err
 	}
 
 	// Проверяем уникальность нового имени
-	//existing, err := s.repoCategory.GetByName(ctx, name)
-	//if err == nil && existing.GUID != guid && existing.GUID != uuid.Nil {
-	//	return entity.ResponseCategoryUpdate{}, entity.ErrCategoryAlreadyExists
-	//}
-	//if err != nil && !errors.Is(err, entity.ErrNotFound) {
-	//	return entity.ResponseCategoryUpdate{}, err
-	//}
+	categories, err := s.repoCategory.List(ctx)
+	if err != nil && !errors.Is(err, entity.ErrNotFound) {
+		return entity.Category{}, err
+	}
+
+	for _, cat := range categories {
+		if cat.Name == name && cat.GUID != guid {
+			return entity.Category{}, entity.ErrCategoryAlreadyExists
+		}
+	}
 
 	// Обновляем имя
 	category.Name = name
 
-	// Сохраняем изменения - здесь используем var, так как err уже объявлена выше
-	var updated, _ = s.repoCategory.Update(ctx, category)
+	// Сохраняем изменения
+	updated, err := s.repoCategory.Update(ctx, category)
 	if err != nil {
-		return entity.ResponseCategoryUpdate{}, err
+		return entity.Category{}, err
 	}
 
-	return entity.ResponseCategoryUpdate{
-		GUID: updated.GUID,
-		Name: updated.Name,
-	}, nil
+	return updated, nil
 }
 
 func (s *srv) Delete(ctx context.Context, guid uuid.UUID) error {

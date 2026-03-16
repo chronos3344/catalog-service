@@ -7,5 +7,4 @@ var (
 	ErrCategoryAlreadyExists = errors.New("category already exists")
 
 	ErrNotFound = errors.New("object not found")
-	//ErrConflict = errors.New("object already exists")
 )

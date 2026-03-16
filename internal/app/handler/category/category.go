@@ -37,7 +37,7 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.serviceCategory.Create(r.Context(), req.Name)
+	category, err := h.serviceCategory.Create(r.Context(), req.Name)
 	if err != nil {
 		if errors.Is(err, entity.ErrCategoryAlreadyExists) {
 			http.Error(w, `{"error":"Category with this name already exists"}`, http.StatusConflict)
@@ -47,10 +47,16 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Конвертируем entity в response DTO
+	resp := entity.ResponseCategoryCreate{
+		GUID: category.GUID,
+		Name: category.Name,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	err = json.NewEncoder(w).Encode(resp)
-	if err != nil {
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		http.Error(w, `{"error":"Failed to encode response"}`, http.StatusInternalServerError)
 		return
 	}
 }
@@ -65,7 +71,7 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.serviceCategory.Get(r.Context(), guid)
+	category, err := h.serviceCategory.Get(r.Context(), guid)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
 			http.Error(w, `{"error":"Category not found"}`, http.StatusNotFound)
@@ -75,23 +81,38 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Конвертируем entity в response DTO
+	resp := entity.ResponseCategoryGet{
+		GUID: category.GUID,
+		Name: category.Name,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(resp)
-	if err != nil {
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		http.Error(w, `{"error":"Failed to encode response"}`, http.StatusInternalServerError)
 		return
 	}
 }
 
 func (h *handler) List(w http.ResponseWriter, r *http.Request) {
-	resp, err := h.serviceCategory.List(r.Context())
+	categories, err := h.serviceCategory.List(r.Context())
 	if err != nil {
 		http.Error(w, `{"error":"Internal server error"}`, http.StatusInternalServerError)
 		return
 	}
 
+	// Конвертируем []entity.Category в entity.ResponseCategoryList
+	resp := make(entity.ResponseCategoryList, 0, len(categories))
+	for _, cat := range categories {
+		resp = append(resp, entity.ResponseCategoryGet{
+			GUID: cat.GUID,
+			Name: cat.Name,
+		})
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(resp)
-	if err != nil {
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		http.Error(w, `{"error":"Failed to encode response"}`, http.StatusInternalServerError)
 		return
 	}
 }
@@ -122,7 +143,7 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.serviceCategory.Update(r.Context(), guid, req.Name)
+	category, err := h.serviceCategory.Update(r.Context(), guid, req.Name)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
 			http.Error(w, `{"error":"Category not found"}`, http.StatusNotFound)
@@ -136,9 +157,15 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Конвертируем entity в response DTO
+	resp := entity.ResponseCategoryUpdate{
+		GUID: category.GUID,
+		Name: category.Name,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(resp)
-	if err != nil {
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		http.Error(w, `{"error":"Failed to encode response"}`, http.StatusInternalServerError)
 		return
 	}
 }
