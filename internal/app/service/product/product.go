@@ -21,10 +21,10 @@ func NewService(repoProduct repository.Product, repoCategory repository.Category
 	}
 }
 
-func (s *srv) Create(ctx context.Context, product entity.Product) (entity.ResponseProductCreate, error) {
+func (s *srv) Create(ctx context.Context, product entity.Product) (entity.Product, error) {
 	_, err := s.repoCategory.GetByGUID(ctx, product.CategoryGUID)
 	if err != nil {
-		return entity.ResponseProductCreate{}, err
+		return entity.Product{}, err
 	}
 
 	filter := entity.RequestProductList{
@@ -34,18 +34,18 @@ func (s *srv) Create(ctx context.Context, product entity.Product) (entity.Respon
 
 	existingList, err := s.repoProduct.List(ctx, filter)
 	if err != nil {
-		return entity.ResponseProductCreate{}, err
+		return entity.Product{}, err
 	}
 	if len(existingList) > 0 {
-		return entity.ResponseProductCreate{}, entity.ErrProductAlreadyExists
+		return entity.Product{}, entity.ErrProductAlreadyExists
 	}
 
 	created, err := s.repoProduct.Create(ctx, product)
 	if err != nil {
-		return entity.ResponseProductCreate{}, err
+		return entity.Product{}, err
 	}
 
-	return entity.ResponseProductCreate{
+	return entity.Product{
 		GUID:         created.GUID,
 		Name:         created.Name,
 		Price:        created.Price,
@@ -54,13 +54,13 @@ func (s *srv) Create(ctx context.Context, product entity.Product) (entity.Respon
 	}, nil
 }
 
-func (s *srv) Get(ctx context.Context, guid uuid.UUID) (entity.ResponseProductGet, error) {
+func (s *srv) Get(ctx context.Context, guid uuid.UUID) (entity.Product, error) {
 	product, err := s.repoProduct.GetByGUID(ctx, guid)
 	if err != nil {
-		return entity.ResponseProductGet{}, err
+		return entity.Product{}, err
 	}
 
-	return entity.ResponseProductGet{
+	return entity.Product{
 		GUID:         product.GUID,
 		Name:         product.Name,
 		Price:        product.Price,
@@ -69,7 +69,7 @@ func (s *srv) Get(ctx context.Context, guid uuid.UUID) (entity.ResponseProductGe
 	}, nil
 }
 
-func (s *srv) List(ctx context.Context, filter entity.RequestProductList) (entity.ResponseProductList, error) {
+func (s *srv) List(ctx context.Context, filter entity.RequestProductList) ([]entity.Product, error) {
 	if filter.CategoryGUID != nil {
 		_, err := s.repoCategory.GetByGUID(ctx, *filter.CategoryGUID)
 		if err != nil {
@@ -81,35 +81,24 @@ func (s *srv) List(ctx context.Context, filter entity.RequestProductList) (entit
 	if err != nil {
 		return nil, err
 	}
-
-	var response entity.ResponseProductList
-	for _, p := range products {
-		response = append(response, entity.ResponseProductGet{
-			GUID:         p.GUID,
-			Name:         p.Name,
-			Price:        p.Price,
-			CategoryGUID: p.CategoryGUID,
-			Description:  p.Description,
-		})
-	}
-	return response, nil
+	return products, nil
 }
 
-func (s *srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProductUpdate) (entity.ResponseProductUpdate, error) {
+func (s *srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProductUpdate) (entity.Product, error) {
 	// Шаг 1: Получаем существующий продукт
 	existingProduct, err := s.getProductForUpdate(ctx, guid)
 	if err != nil {
-		return entity.ResponseProductUpdate{}, err
+		return entity.Product{}, err
 	}
 
 	// Шаг 2: Проверяем уникальность имени
 	if err := s.checkNameUniqueness(ctx, guid, existingProduct.Name, req.Name, existingProduct.CategoryGUID, req.CategoryGUID); err != nil {
-		return entity.ResponseProductUpdate{}, err
+		return entity.Product{}, err
 	}
 
 	// Шаг 3: Проверяем существование категории
 	if err := s.checkCategoryExists(ctx, existingProduct.CategoryGUID, req.CategoryGUID); err != nil {
-		return entity.ResponseProductUpdate{}, err
+		return entity.Product{}, err
 	}
 
 	// Шаг 4: Применяем обновления
@@ -118,11 +107,9 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProd
 	// Шаг 5: Сохраняем
 	updated, err := s.repoProduct.Update(ctx, productToUpdate)
 	if err != nil {
-		return entity.ResponseProductUpdate{}, err
+		return entity.Product{}, err
 	}
-
-	// Шаг 6: Формируем ответ
-	return s.buildUpdateResponse(updated), nil
+	return updated, nil
 }
 
 // getProductForUpdate получает продукт для обновления
@@ -199,19 +186,7 @@ func (s *srv) buildProductForUpdate(guid uuid.UUID, existing *entity.Product, re
 	if req.Description != nil {
 		product.Description = req.Description
 	}
-
 	return product
-}
-
-// buildUpdateResponse формирует ответ
-func (s *srv) buildUpdateResponse(updated entity.Product) entity.ResponseProductUpdate {
-	return entity.ResponseProductUpdate{
-		GUID:         updated.GUID,
-		Name:         updated.Name,
-		Price:        updated.Price,
-		CategoryGUID: updated.CategoryGUID,
-		Description:  updated.Description,
-	}
 }
 
 func (s *srv) Delete(ctx context.Context, guid uuid.UUID) error {
