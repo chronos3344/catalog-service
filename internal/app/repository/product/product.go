@@ -61,11 +61,11 @@ func (r *repoPg) List(ctx context.Context, filter entity.RequestProductList) ([]
 }
 
 func (r *repoPg) Update(ctx context.Context, product entity.Product) (entity.Product, error) {
-	_, err := r._DB.NewUpdate().Model(&product).WherePK().Exec(ctx)
-	return product, err
+	res, err := r._DB.NewUpdate().Model(&product).WherePK().Exec(ctx)
+	return product, rcpostgres.UpdateErr(res, err)
 }
 
 func (r *repoPg) Delete(ctx context.Context, guid uuid.UUID) error {
 	_, err := r._DB.NewDelete().Model(&entity.Product{}).Where("guid = ?", guid).Exec(ctx)
-	return err
+	return rcpostgres.DeleteErr(err)
 }

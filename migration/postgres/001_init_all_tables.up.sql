@@ -1,6 +1,6 @@
-CREATE TABLE IF NOT EXISTS categories (
+CREATE TABLE IF NOT EXISTS category (
     id BIGSERIAL NOT NULL UNIQUE,
-    guid UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    guid UUID NOT NULL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -8,13 +8,13 @@ CREATE TABLE IF NOT EXISTS categories (
 
 --bun:split
 
-CREATE TABLE IF NOT EXISTS products (
+CREATE TABLE IF NOT EXISTS product (
     id BIGSERIAL NOT NULL UNIQUE,
-    guid UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    guid UUID NOT NULL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT DEFAULT NULL,
     price DECIMAL(12,2) NOT NULL,
-    category_guid UUID NOT NULL REFERENCES categories(guid) ON DELETE RESTRICT,
+    category_guid UUID NOT NULL REFERENCES category(guid) ON DELETE RESTRICT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
