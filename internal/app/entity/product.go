@@ -8,7 +8,7 @@ import (
 )
 
 type Product struct {
-	bun.BaseModel `bun:"table:products,alias:p"`
+	bun.BaseModel `bun:"table:product,alias:p"`
 
 	ID           int64     `bun:"id,pk,autoincrement" json:"id"`
 	GUID         uuid.UUID `bun:"guid,type:uuid,pk,default:gen_random_uuid()" json:"guid"`

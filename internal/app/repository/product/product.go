@@ -61,7 +61,7 @@ func (r *repoPg) List(ctx context.Context, filter entity.RequestProductList) ([]
 }
 
 func (r *repoPg) Update(ctx context.Context, product entity.Product) (entity.Product, error) {
-	res, err := r._DB.NewUpdate().Model(&product).WherePK().Exec(ctx)
+	res, err := r._DB.NewUpdate().Model(&product).WherePK().OmitZero().Exec(ctx)
 	return product, rcpostgres.UpdateErr(res, err)
 }
 

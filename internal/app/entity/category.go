@@ -8,7 +8,7 @@ import (
 )
 
 type Category struct {
-	bun.BaseModel `bun:"table:categories,alias:c"`
+	bun.BaseModel `bun:"table:category,alias:c"`
 
 	ID        int64     `bun:"id,pk,autoincrement" json:"id"`
 	GUID      uuid.UUID `bun:"guid,type:uuid,pk,default:gen_random_uuid()" json:"guid"`
