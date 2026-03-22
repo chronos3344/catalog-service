@@ -22,9 +22,9 @@ func NewRepoFromPostgres(_ context.Context, d *rcpostgres.Client) (repository.Pr
 	return &repoPg{_DB: d}, nil
 }
 
-func (r *repoPg) Create(ctx context.Context, product entity.Product) (entity.Product, error) {
+func (r *repoPg) Create(ctx context.Context, product entity.Product) error {
 	_, err := r._DB.NewInsert().Model(&product).Exec(ctx)
-	return product, err
+	return err
 }
 
 func (r *repoPg) GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Product, error) {
@@ -39,14 +39,14 @@ func (r *repoPg) GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Product,
 	return product, nil
 }
 
-func (r *repoPg) List(ctx context.Context, filter entity.RequestProductList) ([]entity.Product, error) {
+func (r *repoPg) List(ctx context.Context, name *string, categoryGUID *uuid.UUID) ([]entity.Product, error) {
 	query := r._DB.NewSelect().Model(&entity.Product{})
 
-	if filter.Name != nil {
-		query = query.Where("name = ?", *filter.Name)
+	if name != nil {
+		query = query.Where("name = ?", *name)
 	}
-	if filter.CategoryGUID != nil {
-		query = query.Where("category_guid = ?", *filter.CategoryGUID)
+	if categoryGUID != nil {
+		query = query.Where("category_guid = ?", *categoryGUID)
 	}
 	if filter.MinPrice != nil {
 		query = query.Where("price >= ?", *filter.MinPrice)

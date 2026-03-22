@@ -22,9 +22,9 @@ func NewRepoFromPostgres(_ context.Context, d *rcpostgres.Client) (repository.Ca
 	return &repoPg{_DB: d}, nil
 }
 
-func (r *repoPg) Create(ctx context.Context, category entity.Category) (entity.Category, error) {
+func (r *repoPg) Create(ctx context.Context, category entity.Category) error {
 	_, err := r._DB.NewInsert().Model(&category).Exec(ctx)
-	return category, err
+	return err
 }
 
 func (r *repoPg) GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Category, error) {
@@ -39,15 +39,15 @@ func (r *repoPg) GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Category
 	return category, nil
 }
 
-func (r *repoPg) List(ctx context.Context) ([]entity.Category, error) {
+func (r *repoPg) List(ctx context.Context, name *string) ([]entity.Category, error) {
 	var categories []entity.Category
 	err := r._DB.NewSelect().Model(&categories).Scan(ctx)
 	return categories, err
 }
 
-func (r *repoPg) Update(ctx context.Context, category entity.Category) (entity.Category, error) {
+func (r *repoPg) Update(ctx context.Context, category entity.Category) error {
 	res, err := r._DB.NewUpdate().Model(&category).WherePK().OmitZero().Exec(ctx)
-	return category, rcpostgres.UpdateErr(res, err)
+	return rcpostgres.UpdateErr(res, err)
 }
 
 func (r *repoPg) Delete(ctx context.Context, guid uuid.UUID) error {
