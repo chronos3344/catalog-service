@@ -27,31 +27,22 @@ func (s *srv) Create(ctx context.Context, product entity.Product) (entity.Produc
 		return entity.Product{}, err
 	}
 
-	filter := entity.RequestProductList{
-		CategoryGUID: &product.CategoryGUID,
-		Name:         &product.Name,
-	}
-
-	existingList, err := s.repoProduct.List(ctx, filter)
-	if err != nil {
+	existingList, err := s.repoProduct.List(ctx, &product.Name, &product.CategoryGUID)
+	if err != nil && !errors.Is(err, entity.ErrNotFound) {
 		return entity.Product{}, err
 	}
 	if len(existingList) > 0 {
 		return entity.Product{}, entity.ErrProductAlreadyExists
 	}
 
-	created, err := s.repoProduct.Create(ctx, product)
+	// Создаем продукт
+	err = s.repoProduct.Create(ctx, product)
 	if err != nil {
 		return entity.Product{}, err
 	}
 
-	return entity.Product{
-		GUID:         created.GUID,
-		Name:         created.Name,
-		Price:        created.Price,
-		CategoryGUID: created.CategoryGUID,
-		Description:  created.Description,
-	}, nil
+	// Возвращаем созданный продукт (с заполненными полями ID, GUID, CreatedAt, UpdatedAt)
+	return product, nil
 }
 
 func (s *srv) Get(ctx context.Context, guid uuid.UUID) (entity.Product, error) {

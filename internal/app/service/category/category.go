@@ -22,7 +22,7 @@ func NewService(repoCategory repository.Category) service.Category {
 
 func (s *srv) Create(ctx context.Context, name string) (entity.Category, error) {
 	// Проверяем существование категории с таким именем
-	categories, err := s.repoCategory.List(ctx, name*string)
+	categories, err := s.repoCategory.List(ctx, &name)
 	if err != nil && !errors.Is(err, entity.ErrNotFound) {
 		return entity.Category{}, err
 	}
@@ -37,12 +37,12 @@ func (s *srv) Create(ctx context.Context, name string) (entity.Category, error) 
 		Name: name,
 	}
 
-	created, err := s.repoCategory.Create(ctx, category)
+	err = s.repoCategory.Create(ctx, category)
 	if err != nil {
 		return entity.Category{}, err
 	}
 
-	return created, nil
+	return category, nil
 }
 
 func (s *srv) Get(ctx context.Context, guid uuid.UUID) (entity.Category, error) {
@@ -55,7 +55,7 @@ func (s *srv) Get(ctx context.Context, guid uuid.UUID) (entity.Category, error) 
 }
 
 func (s *srv) List(ctx context.Context) ([]entity.Category, error) {
-	categories, err := s.repoCategory.List(ctx)
+	categories, err := s.repoCategory.List(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -67,11 +67,11 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, name string) (entity.C
 	// Получаем существующую категорию
 	category, err := s.repoCategory.GetByGUID(ctx, guid)
 	if err != nil {
-		return entity.Category{}, err
+		return category, err
 	}
 
 	// Проверяем уникальность нового имени
-	categories, err := s.repoCategory.List(ctx)
+	categories, err := s.repoCategory.List(ctx, &name)
 	if err != nil && !errors.Is(err, entity.ErrNotFound) {
 		return entity.Category{}, err
 	}
@@ -86,12 +86,12 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, name string) (entity.C
 	category.Name = name
 
 	// Сохраняем изменения
-	updated, err := s.repoCategory.Update(ctx, category)
+	err = s.repoCategory.Update(ctx, category)
 	if err != nil {
-		return entity.Category{}, err
+		return category, err
 	}
 
-	return updated, nil
+	return category, nil
 }
 
 func (s *srv) Delete(ctx context.Context, guid uuid.UUID) error {
