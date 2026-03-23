@@ -41,18 +41,18 @@ func (r *repoPg) GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Product,
 
 func (r *repoPg) List(ctx context.Context, name *string, categoryGUID *uuid.UUID) ([]entity.Product, error) {
 	query := r._DB.NewSelect().Model(&entity.Product{})
-
+	var req entity.RequestProductList
 	if name != nil {
 		query = query.Where("name = ?", *name)
 	}
 	if categoryGUID != nil {
 		query = query.Where("category_guid = ?", *categoryGUID)
 	}
-	if filter.MinPrice != nil {
-		query = query.Where("price >= ?", *filter.MinPrice)
+	if req.MinPrice != nil {
+		query = query.Where("price >= ?", *req.MinPrice)
 	}
-	if filter.MaxPrice != nil {
-		query = query.Where("price <= ?", *filter.MaxPrice)
+	if req.MaxPrice != nil {
+		query = query.Where("price <= ?", *req.MaxPrice)
 	}
 
 	var products []entity.Product
@@ -60,9 +60,9 @@ func (r *repoPg) List(ctx context.Context, name *string, categoryGUID *uuid.UUID
 	return products, err
 }
 
-func (r *repoPg) Update(ctx context.Context, product entity.Product) (entity.Product, error) {
+func (r *repoPg) Update(ctx context.Context, product entity.Product) error {
 	res, err := r._DB.NewUpdate().Model(&product).WherePK().OmitZero().Exec(ctx)
-	return product, rcpostgres.UpdateErr(res, err)
+	return rcpostgres.UpdateErr(res, err)
 }
 
 func (r *repoPg) Delete(ctx context.Context, guid uuid.UUID) error {

@@ -22,7 +22,7 @@ func NewService(repoCategory repository.Category) service.Category {
 
 func (s *srv) Create(ctx context.Context, name string) (entity.Category, error) {
 	// Проверяем существование категории с таким именем
-	categories, err := s.repoCategory.List(ctx)
+	categories, err := s.repoCategory.List(ctx, name*string)
 	if err != nil && !errors.Is(err, entity.ErrNotFound) {
 		return entity.Category{}, err
 	}
