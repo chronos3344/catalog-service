@@ -41,7 +41,7 @@ func (r *repoPg) GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Category
 
 func (r *repoPg) List(ctx context.Context, name *string) ([]entity.Category, error) {
 	var categories []entity.Category
-	err := r._DB.NewSelect().Model(&categories).Scan(ctx)
+	err := r._DB.NewSelect().Model(&categories).Where("name = ?", name).Scan(ctx)
 	return categories, err
 }
 

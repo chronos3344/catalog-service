@@ -39,24 +39,9 @@ func (r *repoPg) GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Product,
 	return product, nil
 }
 
-func (r *repoPg) List(ctx context.Context, name *string, categoryGUID *uuid.UUID) ([]entity.Product, error) {
-	query := r._DB.NewSelect().Model(&entity.Product{})
-	var req entity.RequestProductList
-	if name != nil {
-		query = query.Where("name = ?", *name)
-	}
-	if categoryGUID != nil {
-		query = query.Where("category_guid = ?", *categoryGUID)
-	}
-	if req.MinPrice != nil {
-		query = query.Where("price >= ?", *req.MinPrice)
-	}
-	if req.MaxPrice != nil {
-		query = query.Where("price <= ?", *req.MaxPrice)
-	}
-
+func (r *repoPg) List(ctx context.Context) ([]entity.Product, error) {
 	var products []entity.Product
-	err := query.Order("created_at DESC").Scan(ctx, &products)
+	err := r._DB.NewSelect().Model(&products).Order("created_at DESC").Scan(ctx)
 	return products, err
 }
 

@@ -11,7 +11,7 @@ type Product struct {
 	bun.BaseModel `bun:"table:product,alias:p"`
 
 	ID           int64     `bun:"id,pk,autoincrement" json:"id"`
-	GUID         uuid.UUID `bun:"guid,type:uuid,pk,default:gen_random_uuid()" json:"guid"`
+	GUID         uuid.UUID `bun:"guid,type:uuid,pk" json:"guid"`
 	Name         string    `bun:"name,notnull" json:"name"`
 	Description  *string   `bun:"description" json:"description"`
 	Price        float64   `bun:"price,type:decimal(12,2),notnull" json:"price"`
