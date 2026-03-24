@@ -18,7 +18,7 @@ type Category interface {
 type Product interface {
 	Create(ctx context.Context, product entity.Product) error
 	GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Product, error)
-	List(ctx context.Context) ([]entity.Product, error)
+	List(ctx context.Context, name *string, categoryGUID *uuid.UUID) ([]entity.Product, error)
 	Update(ctx context.Context, product entity.Product) error
 	Delete(ctx context.Context, guid uuid.UUID) error
 }
