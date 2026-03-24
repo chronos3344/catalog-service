@@ -68,7 +68,7 @@ func (s *srv) List(ctx context.Context, filter entity.RequestProductList) ([]ent
 		}
 	}
 
-	products, err := s.repoProduct.List(ctx, filter)
+	products, err := s.repoProduct.List(ctx, filter.Name, filter.CategoryGUID)
 	if err != nil {
 		return nil, err
 	}
@@ -96,11 +96,13 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProd
 	productToUpdate := s.buildProductForUpdate(guid, existingProduct, req)
 
 	// Шаг 5: Сохраняем
-	updated, err := s.repoProduct.Update(ctx, productToUpdate)
+	err = s.repoProduct.Update(ctx, productToUpdate)
 	if err != nil {
 		return entity.Product{}, err
 	}
-	return updated, nil
+
+	// Возвращаем обновленный продукт
+	return productToUpdate, nil
 }
 
 // getProductForUpdate получает продукт для обновления
@@ -127,11 +129,7 @@ func (s *srv) checkNameUniqueness(ctx context.Context, guid uuid.UUID, oldName s
 		categoryGUID = *newCategoryGUID
 	}
 
-	filter := entity.RequestProductList{
-		CategoryGUID: &categoryGUID,
-		Name:         newName,
-	}
-	existingList, err := s.repoProduct.List(ctx, filter)
+	existingList, err := s.repoProduct.List(ctx, newName, &categoryGUID)
 	if err != nil {
 		return err
 	}

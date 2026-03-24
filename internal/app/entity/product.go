@@ -29,14 +29,6 @@ type RequestProductCreate struct {
 	Description  *string   `json:"description"`
 }
 
-type ResponseProductCreate struct {
-	GUID         uuid.UUID `json:"guid"`
-	Name         string    `json:"name"`
-	Price        float64   `json:"price"`
-	CategoryGUID uuid.UUID `json:"category_guid"`
-	Description  *string   `json:"description"`
-}
-
 type ResponseProductGet struct {
 	GUID         uuid.UUID `json:"guid"`
 	Name         string    `json:"name"`
@@ -50,14 +42,6 @@ type RequestProductUpdate struct {
 	Price        *float64   `json:"price"`
 	CategoryGUID *uuid.UUID `json:"category_guid"`
 	Description  *string    `json:"description"`
-}
-
-type ResponseProductUpdate struct {
-	GUID         uuid.UUID `json:"guid"`
-	Name         string    `json:"name"`
-	Price        float64   `json:"price"`
-	CategoryGUID uuid.UUID `json:"category_guid"`
-	Description  *string   `json:"description"`
 }
 
 type RequestProductList struct {
