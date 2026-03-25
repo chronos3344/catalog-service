@@ -41,10 +41,14 @@ func (r *repoPg) GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Product,
 
 func (r *repoPg) List(ctx context.Context, name *string, categoryGUID *uuid.UUID) ([]entity.Product, error) {
 	var products []entity.Product
-	query := r._DB.NewSelect().Model(&products).Order("created_at DESC").Where("categoryGUID = ?", categoryGUID)
+	query := r._DB.NewSelect().Model(&products).Order("created_at DESC")
 
 	if name != nil {
 		query = query.Where("name = ?", name)
+	}
+
+	if categoryGUID != nil {
+		query = query.Where("categoryGUID = ?", categoryGUID)
 	}
 
 	err := query.Scan(ctx)
