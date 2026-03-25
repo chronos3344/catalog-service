@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	"github.com/chronos3344/catalog-service/internal/app/repository"
@@ -41,7 +42,18 @@ func (r *repoPg) GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Category
 
 func (r *repoPg) List(ctx context.Context, name *string) ([]entity.Category, error) {
 	var categories []entity.Category
-	err := r._DB.NewSelect().Model(&categories).Where("name = ?", name).Scan(ctx)
+	query := r._DB.NewSelect().Model(&categories)
+
+	if name != nil {
+		query = query.Where("name = ?", name)
+	}
+
+	err := query.Scan(ctx)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to list categories: %w", err)
+	}
+
 	return categories, err
 }
 
