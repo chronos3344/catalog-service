@@ -4,15 +4,16 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/chronos3344/catalog-service/migration"
+	"github.com/uptrace/bun/migrate"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/chronos3344/catalog-service/internal/app/config/section"
-	"github.com/chronos3344/catalog-service/migration"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
-	"github.com/uptrace/bun/migrate"
 )
 
 type (
@@ -77,7 +78,6 @@ func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, erro
 
 func (c *Client) Migrate(ctx context.Context) (oldVer, newVer int64, err error) {
 	migrations := migrate.NewMigrations()
-
 	if err = migrations.Discover(migration.Postgres); err != nil {
 		return 0, 0, fmt.Errorf("failed to discover migrations: %w", err)
 	}
@@ -87,50 +87,33 @@ func (c *Client) Migrate(ctx context.Context) (oldVer, newVer int64, err error) 
 		migrate.WithLocksTableName(c.cfg.MigrationTable + "_lock"),
 		migrate.WithMarkAppliedOnSuccess(true),
 	}
+
 	m := migrate.NewMigrator(c.rawBunDB, migrations, opts...)
-	// Инициализируем таблицу миграций
-	if err := m.Init(ctx); err != nil {
+
+	if err = m.Init(ctx); err != nil {
 		return 0, 0, fmt.Errorf("failed to init migrations table: %w", err)
 	}
 
-	// Получаем применённые миграции (в порядке убывания)
 	applied, err := m.AppliedMigrations(ctx)
 	if err != nil {
 		return 0, 0, fmt.Errorf("failed to get applied migrations: %w", err)
 	}
 
-	// Вычисляем oldVer - текущую версию ДО применения новых миграций
 	if len(applied) > 0 {
-		oldVer, err = extractMigrationVersion(applied[0].Name)
-		if err != nil {
-			return 0, 0, fmt.Errorf("failed to parse old migration version: %w", err)
-		}
-	} else {
-		oldVer = 0
+		oldVer, _ = strconv.ParseInt(applied[0].Name, 10, 64)
 	}
 
-	// Применяем новые миграции
 	mgg, err := m.Migrate(ctx)
 	if err != nil {
 		return oldVer, oldVer, fmt.Errorf("failed to apply migrations: %w", err)
 	}
 
-	// Вычисляем newVer на основе применённых миграций
 	newVer = oldVer
-
-	if len(mgg.Migrations) > 0 {
-		// Ищем максимальную версию среди всех применённых миграций
-		maxVer := oldVer
-		for _, mg := range mgg.Migrations {
-			ver, err := extractMigrationVersion(mg.Name)
-			if err != nil {
-				return oldVer, oldVer, fmt.Errorf("failed to parse new migration version: %w", err)
-			}
-			if ver > maxVer {
-				maxVer = ver
-			}
+	for _, mg := range mgg.Migrations {
+		ver, _ := strconv.ParseInt(mg.Name, 10, 64)
+		if ver > newVer {
+			newVer = ver
 		}
-		newVer = maxVer
 	}
 
 	return oldVer, newVer, nil
