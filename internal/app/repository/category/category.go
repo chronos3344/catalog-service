@@ -19,8 +19,8 @@ type (
 	_DB = rcpostgres.Client // Наш клиент, который мы получаем, когда инициализируем соединение с БД
 )
 
-func NewRepoFromPostgres(_ context.Context, d *rcpostgres.Client) (repository.Category, error) {
-	return &repoPg{_DB: d}, nil
+func NewRepoFromPostgres(client *rcpostgres.Client) repository.Category {
+	return &repoPg{_DB: client}
 }
 
 func (r *repoPg) Create(ctx context.Context, category entity.Category) error {

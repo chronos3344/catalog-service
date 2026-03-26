@@ -18,8 +18,8 @@ type (
 	_DB = rcpostgres.Client
 )
 
-func NewRepoFromPostgres(_ context.Context, d *rcpostgres.Client) (repository.Product, error) {
-	return &repoPg{_DB: d}, nil
+func NewRepoFromPostgres(client *rcpostgres.Client) repository.Product {
+	return &repoPg{_DB: client}
 }
 
 func (r *repoPg) Create(ctx context.Context, product entity.Product) error {
