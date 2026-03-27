@@ -118,12 +118,3 @@ func (c *Client) Migrate(ctx context.Context) (oldVer, newVer int64, err error) 
 
 	return oldVer, newVer, nil
 }
-
-//func extractMigrationVersion(name string) (int64, error) {
-//	var version int64
-//	_, err := fmt.Sscanf(name, "%d_", &version)
-//	if err != nil {
-//		return 0, fmt.Errorf("invalid migration name format: %s", name)
-//	}
-//	return version, nil
-//}

@@ -18,7 +18,6 @@ type Product struct {
 	CategoryGUID uuid.UUID `bun:"category_guid,type:uuid,notnull" json:"category_guid"`
 	CreatedAt    time.Time `bun:"created_at,notnull,default:current_timestamp" json:"created_at"`
 	UpdatedAt    time.Time `bun:"updated_at,notnull,default:current_timestamp" json:"updated_at"`
-	//Category     *Category `bun:"rel:belongs_to,join:category_guid=guid" json:"category,omitempty"`
 }
 
 // RequestProductCreate - модель для создания продукта
