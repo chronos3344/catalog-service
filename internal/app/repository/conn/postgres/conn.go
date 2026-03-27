@@ -4,16 +4,16 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/chronos3344/catalog-service/migration"
-	"github.com/uptrace/bun/migrate"
 	"net/url"
 	"strconv"
 	"time"
 
 	"github.com/chronos3344/catalog-service/internal/app/config/section"
+	"github.com/chronos3344/catalog-service/migration"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
+	"github.com/uptrace/bun/migrate"
 )
 
 type (
@@ -119,11 +119,11 @@ func (c *Client) Migrate(ctx context.Context) (oldVer, newVer int64, err error) 
 	return oldVer, newVer, nil
 }
 
-func extractMigrationVersion(name string) (int64, error) {
-	var version int64
-	_, err := fmt.Sscanf(name, "%d_", &version)
-	if err != nil {
-		return 0, fmt.Errorf("invalid migration name format: %s", name)
-	}
-	return version, nil
-}
+//func extractMigrationVersion(name string) (int64, error) {
+//	var version int64
+//	_, err := fmt.Sscanf(name, "%d_", &version)
+//	if err != nil {
+//		return 0, fmt.Errorf("invalid migration name format: %s", name)
+//	}
+//	return version, nil
+//}

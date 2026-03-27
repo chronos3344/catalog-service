@@ -48,7 +48,7 @@ func (r *repoPg) List(ctx context.Context, name *string, categoryGUID *uuid.UUID
 	}
 
 	if categoryGUID != nil {
-		query = query.Where("categoryGUID = ?", categoryGUID)
+		query = query.Where("category_guid = ?", categoryGUID)
 	}
 
 	err := query.Scan(ctx)

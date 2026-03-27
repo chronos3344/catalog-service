@@ -19,7 +19,6 @@ import (
 	pproduct "github.com/chronos3344/catalog-service/internal/app/repository/product"
 	mcategory "github.com/chronos3344/catalog-service/internal/app/service/category"
 	mproduct "github.com/chronos3344/catalog-service/internal/app/service/product"
-
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 )

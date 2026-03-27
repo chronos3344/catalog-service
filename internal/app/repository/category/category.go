@@ -57,11 +57,6 @@ func (r *repoPg) List(ctx context.Context, name *string) ([]entity.Category, err
 	return categories, err
 }
 
-//func (r *repoPg) Update(ctx context.Context, category entity.Category) error {
-//	res, err := r._DB.NewUpdate().Model(&category).WherePK().OmitZero().Exec(ctx)
-//	return rcpostgres.UpdateErr(res, err)
-//}
-
 func (r *repoPg) Update(ctx context.Context, category entity.Category) error {
 	res, err := r._DB.NewUpdate().
 		Model(&category).
