@@ -54,7 +54,7 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, `{"error":"Category not found"}`, http.StatusNotFound)
 			return
 		}
-		if errors.Is(err, entity.ErrProductAlreadyExists) {
+		if errors.Is(err, entity.ErrAlreadyExists) {
 			http.Error(w, `{"error":"Product with this name already exists"}`, http.StatusConflict)
 			return
 		}
@@ -153,7 +153,7 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, `{"error":"Product not found"}`, http.StatusNotFound)
 			return
 		}
-		if errors.Is(err, entity.ErrProductAlreadyExists) {
+		if errors.Is(err, entity.ErrAlreadyExists) {
 			http.Error(w, `{"error":"Product with this name already exists"}`, http.StatusConflict)
 			return
 		}

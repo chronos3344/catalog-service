@@ -28,7 +28,7 @@ func (s *srv) Create(ctx context.Context, name string) (entity.Category, error) 
 	}
 
 	if len(categories) > 0 {
-		return entity.Category{}, entity.ErrCategoryAlreadyExists
+		return entity.Category{}, entity.ErrAlreadyExists
 	}
 
 	category := entity.Category{
@@ -71,7 +71,7 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, name string) (entity.C
 	}
 
 	if len(categories) > 0 && categories[0].GUID != guid {
-		return entity.Category{}, entity.ErrCategoryAlreadyExists
+		return entity.Category{}, entity.ErrAlreadyExists
 	}
 
 	// Обновляем имя

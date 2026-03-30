@@ -10,8 +10,8 @@ import (
 type Product struct {
 	bun.BaseModel `bun:"table:product,alias:p"`
 
-	ID           int64     `bun:"id,pk,autoincrement" json:"id"`
-	GUID         uuid.UUID `bun:"guid,type:uuid,pk" json:"guid"`
+	ID           int64     `bun:"id,autoincrement" json:"id"`
+	GUID         uuid.UUID `bun:"guid,type:uuid,notnull" json:"guid"`
 	Name         string    `bun:"name,notnull" json:"name"`
 	Description  *string   `bun:"description" json:"description"`
 	Price        float64   `bun:"price,type:decimal(12,2),notnull" json:"price"`
@@ -51,3 +51,7 @@ type RequestProductList struct {
 }
 
 type ResponseProductList []ResponseProductGet
+
+////////////////////////////////////////////////////////////////////////////////
+///// HTTP REQUEST & RESPONSE //////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////

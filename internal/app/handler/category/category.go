@@ -39,7 +39,7 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	category, err := h.serviceCategory.Create(r.Context(), req.Name)
 	if err != nil {
-		if errors.Is(err, entity.ErrCategoryAlreadyExists) {
+		if errors.Is(err, entity.ErrAlreadyExists) {
 			http.Error(w, `{"error":"Category with this name already exists"}`, http.StatusConflict)
 			return
 		}
@@ -149,7 +149,7 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, `{"error":"Category not found"}`, http.StatusNotFound)
 			return
 		}
-		if errors.Is(err, entity.ErrCategoryAlreadyExists) {
+		if errors.Is(err, entity.ErrAlreadyExists) {
 			http.Error(w, `{"error":"Category with this name already exists"}`, http.StatusConflict)
 			return
 		}

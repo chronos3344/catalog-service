@@ -33,7 +33,7 @@ func (s *Srv) Create(ctx context.Context, product entity.Product) (entity.Produc
 		return entity.Product{}, err
 	}
 	if len(existingList) > 0 {
-		return entity.Product{}, entity.ErrProductAlreadyExists
+		return entity.Product{}, entity.ErrAlreadyExists
 	}
 
 	err = s.repoProduct.Create(ctx, product)
@@ -95,7 +95,7 @@ func (s *Srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProd
 	}
 
 	if len(products) > 0 && products[0].GUID != guid {
-		return entity.Product{}, entity.ErrProductAlreadyExists
+		return entity.Product{}, entity.ErrAlreadyExists
 	}
 
 	err = s.repoProduct.Update(ctx, product)
