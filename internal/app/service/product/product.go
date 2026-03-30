@@ -99,7 +99,10 @@ func (s *Srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProd
 	}
 
 	err = s.repoProduct.Update(ctx, product)
-	return product, err
+	if err != nil {
+		return entity.Product{}, err
+	}
+	return product, nil
 }
 
 func (s *Srv) Delete(ctx context.Context, guid uuid.UUID) error {
