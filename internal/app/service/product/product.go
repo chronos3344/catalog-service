@@ -6,25 +6,19 @@ import (
 
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	"github.com/chronos3344/catalog-service/internal/app/repository"
+	"github.com/chronos3344/catalog-service/internal/app/service"
 	"github.com/google/uuid"
 )
 
-type (
-	Srv struct {
-		*_service
-	}
-	_service struct {
-		repoProduct  repository.Product
-		repoCategory repository.Category
-	}
-)
+type Srv struct {
+	repoProduct  repository.Product
+	repoCategory repository.Category
+}
 
-func NewService(repoProduct repository.Product, repoCategory repository.Category) *Srv {
+func NewService(repoProduct repository.Product, repoCategory repository.Category) service.Product {
 	return &Srv{
-		_service: &_service{
-			repoProduct:  repoProduct,
-			repoCategory: repoCategory,
-		},
+		repoProduct:  repoProduct,
+		repoCategory: repoCategory,
 	}
 }
 
@@ -42,23 +36,21 @@ func (s *Srv) Create(ctx context.Context, product entity.Product) (entity.Produc
 		return entity.Product{}, entity.ErrProductAlreadyExists
 	}
 
-	// Создаем продукт
 	err = s.repoProduct.Create(ctx, product)
 	if err != nil {
 		return entity.Product{}, err
 	}
 
-	// Возвращаем созданный продукт (с заполненными полями ID, GUID, CreatedAt, UpdatedAt)
 	return product, nil
 }
 
 func (s *Srv) Get(ctx context.Context, guid uuid.UUID) (entity.Product, error) {
-	_, err := s.repoProduct.GetByGUID(ctx, guid)
+	product, err := s.repoProduct.GetByGUID(ctx, guid)
 	if err != nil {
 		return entity.Product{}, err
 	}
 
-	return s.repoProduct.GetByGUID(ctx, guid)
+	return product, nil
 }
 
 func (s *Srv) List(ctx context.Context, filter entity.RequestProductList) ([]entity.Product, error) {
@@ -94,10 +86,8 @@ func (s *Srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProd
 		return entity.Product{}, err
 	}
 
-	for _, p := range products {
-		if p.GUID != guid {
-			return entity.Product{}, entity.ErrProductAlreadyExists
-		}
+	if len(products) > 0 && products[0].GUID != guid {
+		return entity.Product{}, entity.ErrProductAlreadyExists
 	}
 
 	err = s.repoProduct.Update(ctx, product)

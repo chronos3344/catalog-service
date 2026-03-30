@@ -3,7 +3,6 @@ package mcategory
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	"github.com/chronos3344/catalog-service/internal/app/repository"
@@ -46,12 +45,7 @@ func (s *srv) Create(ctx context.Context, name string) (entity.Category, error) 
 }
 
 func (s *srv) Get(ctx context.Context, guid uuid.UUID) (entity.Category, error) {
-	category, err := s.repoCategory.GetByGUID(ctx, guid)
-	if err != nil {
-		return entity.Category{}, err
-	}
-
-	return category, nil
+	return s.repoCategory.GetByGUID(ctx, guid)
 }
 
 func (s *srv) List(ctx context.Context) ([]entity.Category, error) {
@@ -67,7 +61,7 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, name string) (entity.C
 	// Получаем существующую категорию
 	category, err := s.repoCategory.GetByGUID(ctx, guid)
 	if err != nil {
-		return category, err
+		return entity.Category{}, err
 	}
 
 	// Проверяем уникальность нового имени
@@ -95,10 +89,7 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, name string) (entity.C
 func (s *srv) Delete(ctx context.Context, guid uuid.UUID) error {
 	_, err := s.repoCategory.GetByGUID(ctx, guid)
 	if err != nil {
-		if errors.Is(err, entity.ErrNotFound) {
-			return fmt.Errorf("category with guid %s not found: %w", guid, entity.ErrNotFound)
-		}
-		return fmt.Errorf("failed to check category existence: %w", err)
+		return err
 	}
 	return s.repoCategory.Delete(ctx, guid)
 }
