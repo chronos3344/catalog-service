@@ -81,6 +81,14 @@ func (s *Srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProd
 		product.CategoryGUID = *req.CategoryGUID
 	}
 
+	if req.Price != nil {
+		product.Price = *req.Price
+	}
+
+	if req.Description != nil {
+		product.Description = req.Description
+	}
+
 	products, err := s.repoProduct.List(ctx, &product.Name, &product.CategoryGUID)
 	if err != nil && !errors.Is(err, entity.ErrNotFound) {
 		return entity.Product{}, err
