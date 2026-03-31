@@ -60,7 +60,7 @@ func main() {
 	}
 
 	// Services
-	categoryService := mcategory.NewService(categoryRepo)
+	categoryService := mcategory.NewService(categoryRepo, productRepo)
 	productService := mproduct.NewService(productRepo, categoryRepo)
 
 	// Handlers

@@ -3,6 +3,7 @@ package hproduct
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/chronos3344/catalog-service/internal/app/entity"
@@ -98,17 +99,6 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) List(w http.ResponseWriter, r *http.Request) {
-	var req entity.RequestProductList
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, `{"error":"Invalid request format"}`, http.StatusBadRequest)
-		return
-	}
-
-	if req.MinPrice != nil && req.MaxPrice != nil && *req.MinPrice > *req.MaxPrice {
-		http.Error(w, `{"error":"Min price cannot be greater than max price"}`, http.StatusBadRequest)
-		return
-	}
-
 	resp, err := h.serviceProduct.List(r.Context())
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
@@ -122,6 +112,7 @@ func (h *handler) List(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
+		log.Printf("failed to encode response: %v", err)
 		return
 	}
 }

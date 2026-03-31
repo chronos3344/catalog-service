@@ -11,7 +11,7 @@ type Product struct {
 	bun.BaseModel `bun:"table:product,alias:p"`
 
 	ID           int64     `bun:"id,autoincrement" json:"id"`
-	GUID         uuid.UUID `bun:"guid,type:uuid,notnull" json:"guid"`
+	GUID         uuid.UUID `bun:"guid,type:uuid,notnull,pk" json:"guid"`
 	Name         string    `bun:"name,notnull" json:"name"`
 	Description  *string   `bun:"description" json:"description"`
 	Price        float64   `bun:"price,type:decimal(12,2),notnull" json:"price"`
@@ -29,7 +29,7 @@ type RequestProductCreate struct {
 }
 
 func (r RequestProductCreate) Validate() error {
-	if r.Name == "" {
+	if r.Name == "" || r.Price <= 0 || r.CategoryGUID == uuid.Nil {
 		return ErrIncorrectParameters
 	}
 	return nil
@@ -43,17 +43,16 @@ type RequestProductUpdate struct {
 }
 
 func (r RequestProductUpdate) Validate() error {
-	if r.Name == nil || *r.Name == "" {
+	if r.Name != nil && *r.Name == "" {
+		return ErrIncorrectParameters
+	}
+	if r.Price != nil && *r.Price <= 0 {
+		return ErrIncorrectParameters
+	}
+	if r.CategoryGUID != nil && *r.CategoryGUID == uuid.Nil {
 		return ErrIncorrectParameters
 	}
 	return nil
-}
-
-type RequestProductList struct {
-	CategoryGUID *uuid.UUID `json:"category_guid"`
-	MinPrice     *float64   `json:"min_price"`
-	MaxPrice     *float64   `json:"max_price"`
-	Name         *string    `json:"name"`
 }
 
 type ResponseProduct struct {
