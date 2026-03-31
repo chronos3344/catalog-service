@@ -16,9 +16,9 @@ type Category interface {
 }
 
 type Product interface {
-	Create(ctx context.Context, product entity.Product) (entity.Product, error)
+	Create(ctx context.Context, product entity.RequestProductCreate) (entity.Product, error)
 	Get(ctx context.Context, guid uuid.UUID) (entity.Product, error)
-	List(ctx context.Context, filter entity.RequestProductList) ([]entity.Product, error)
+	List(ctx context.Context) ([]entity.Product, error)
 	Update(ctx context.Context, guid uuid.UUID, req entity.RequestProductUpdate) (entity.Product, error)
 	Delete(ctx context.Context, guid uuid.UUID) error
 }

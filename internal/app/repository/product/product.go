@@ -44,11 +44,11 @@ func (r *repoPg) List(ctx context.Context, name *string, categoryGUID *uuid.UUID
 	query := r._DB.NewSelect().Model(&products).Order("created_at DESC")
 
 	if name != nil {
-		query = query.Where("name = ?", name)
+		query = query.Where("name = ?", *name)
 	}
 
 	if categoryGUID != nil {
-		query = query.Where("category_guid = ?", categoryGUID)
+		query = query.Where("category_guid = ?", *categoryGUID)
 	}
 
 	err := query.Scan(ctx)
@@ -57,7 +57,7 @@ func (r *repoPg) List(ctx context.Context, name *string, categoryGUID *uuid.UUID
 }
 
 func (r *repoPg) Update(ctx context.Context, product entity.Product) error {
-	res, err := r._DB.NewUpdate().Model(&product).WherePK().OmitZero().Exec(ctx)
+	res, err := r._DB.NewUpdate().Model(&product).WherePK().ExcludeColumn("id", "created_at").Exec(ctx)
 	return rcpostgres.UpdateErr(res, err)
 }
 

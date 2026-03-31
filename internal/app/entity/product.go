@@ -28,12 +28,11 @@ type RequestProductCreate struct {
 	Description  *string   `json:"description"`
 }
 
-type ResponseProductGet struct {
-	GUID         uuid.UUID `json:"guid"`
-	Name         string    `json:"name"`
-	Price        float64   `json:"price"`
-	CategoryGUID uuid.UUID `json:"category_guid"`
-	Description  *string   `json:"description"`
+func (r RequestProductCreate) Validate() error {
+	if r.Name == "" {
+		return ErrIncorrectParameters
+	}
+	return nil
 }
 
 type RequestProductUpdate struct {
@@ -43,6 +42,13 @@ type RequestProductUpdate struct {
 	Description  *string    `json:"description"`
 }
 
+func (r RequestProductUpdate) Validate() error {
+	if r.Name == nil || *r.Name == "" {
+		return ErrIncorrectParameters
+	}
+	return nil
+}
+
 type RequestProductList struct {
 	CategoryGUID *uuid.UUID `json:"category_guid"`
 	MinPrice     *float64   `json:"min_price"`
@@ -50,8 +56,12 @@ type RequestProductList struct {
 	Name         *string    `json:"name"`
 }
 
-type ResponseProductList []ResponseProductGet
-
-////////////////////////////////////////////////////////////////////////////////
-///// HTTP REQUEST & RESPONSE //////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
+type ResponseProduct struct {
+	GUID         uuid.UUID `json:"guid"`
+	Name         string    `json:"name"`
+	Description  *string   `json:"description"`
+	Price        float64   `json:"price"`
+	CategoryGUID uuid.UUID `json:"category_guid"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}

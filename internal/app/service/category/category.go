@@ -3,6 +3,7 @@ package mcategory
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	"github.com/chronos3344/catalog-service/internal/app/repository"
@@ -12,6 +13,7 @@ import (
 
 type srv struct {
 	repoCategory repository.Category
+	repoProduct  repository.Product
 }
 
 func NewService(repoCategory repository.Category) service.Category {
@@ -32,8 +34,10 @@ func (s *srv) Create(ctx context.Context, name string) (entity.Category, error) 
 	}
 
 	category := entity.Category{
-		GUID: uuid.New(),
-		Name: name,
+		GUID:      uuid.New(),
+		Name:      name,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	err = s.repoCategory.Create(ctx, category)
@@ -76,6 +80,7 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, name string) (entity.C
 
 	// Обновляем имя
 	category.Name = name
+	category.UpdatedAt = time.Now()
 
 	// Сохраняем изменения
 	err = s.repoCategory.Update(ctx, category)
@@ -91,5 +96,14 @@ func (s *srv) Delete(ctx context.Context, guid uuid.UUID) error {
 	if err != nil {
 		return err
 	}
+
+	products, err := s.repoProduct.List(ctx, nil, &guid)
+	if err != nil {
+		return err
+	}
+	if len(products) > 0 {
+		return entity.ErrCategoryHasProducts
+	}
+
 	return s.repoCategory.Delete(ctx, guid)
 }

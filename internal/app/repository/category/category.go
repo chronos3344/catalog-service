@@ -45,7 +45,7 @@ func (r *repoPg) List(ctx context.Context, name *string) ([]entity.Category, err
 	query := r._DB.NewSelect().Model(&categories)
 
 	if name != nil {
-		query = query.Where("name = ?", name)
+		query = query.Where("name = ?", *name)
 	}
 
 	err := query.Scan(ctx)
