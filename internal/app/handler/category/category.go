@@ -88,8 +88,7 @@ func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		http.Error(w, `{"error":"Failed to encode response"}`, http.StatusInternalServerError)
-		return
+		log.Printf("Failed to encode response: %v", err)
 	}
 }
 
@@ -113,8 +112,7 @@ func (h *handler) List(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		http.Error(w, `{"error":"Failed to encode response"}`, http.StatusInternalServerError)
-		return
+		log.Printf("Failed to encode response: %v", err)
 	}
 }
 
@@ -163,8 +161,7 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		http.Error(w, `{"error":"Failed to encode response"}`, http.StatusInternalServerError)
-		return
+		log.Printf("Failed to encode response: %v", err)
 	}
 }
 
