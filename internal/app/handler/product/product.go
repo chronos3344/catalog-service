@@ -29,8 +29,8 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Name == "" {
-		http.Error(w, `{"error":"Name is required"}`, http.StatusBadRequest)
+	if err := req.Validate(); err != nil {
+		http.Error(w, `{"error":"incorrect parameters"}`, http.StatusBadRequest)
 		return
 	}
 
@@ -39,17 +39,12 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(req.Name) > 255 {
-		http.Error(w, `{"error":"Name too long"}`, http.StatusBadRequest)
-		return
-	}
-
 	if req.CategoryGUID == uuid.Nil {
 		http.Error(w, `{"error":"Category GUID is required"}`, http.StatusBadRequest)
 		return
 	}
 
-	resp, err := h.serviceProduct.Create(r.Context(), req)
+	product, err := h.serviceProduct.Create(r.Context(), req)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
 			http.Error(w, `{"error":"Category not found"}`, http.StatusNotFound)
@@ -63,6 +58,16 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	resp := entity.ResponseProductCreate{
+		GUID:         product.GUID,
+		Name:         product.Name,
+		Description:  product.Description,
+		Price:        product.Price,
+		CategoryGUID: product.CategoryGUID,
+		CreatedAt:    product.CreatedAt,
+		UpdatedAt:    product.UpdatedAt,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	err = json.NewEncoder(w).Encode(resp)
@@ -71,9 +76,9 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
+func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	guidStr := vars["product_guid"]
+	guidStr := vars["guid"]
 
 	guid, err := uuid.Parse(guidStr)
 	if err != nil {
@@ -81,7 +86,7 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.serviceProduct.Get(r.Context(), guid)
+	product, err := h.serviceProduct.Get(r.Context(), guid)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
 			http.Error(w, `{"error":"Product not found"}`, http.StatusNotFound)
@@ -89,6 +94,16 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 		}
 		http.Error(w, `{"error":"Internal server error"}`, http.StatusInternalServerError)
 		return
+	}
+
+	resp := entity.ResponseProductGet{
+		GUID:         product.GUID,
+		Name:         product.Name,
+		Description:  product.Description,
+		Price:        product.Price,
+		CategoryGUID: product.CategoryGUID,
+		CreatedAt:    product.CreatedAt,
+		UpdatedAt:    product.UpdatedAt,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -101,10 +116,6 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 func (h *handler) List(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.serviceProduct.List(r.Context())
 	if err != nil {
-		if errors.Is(err, entity.ErrNotFound) {
-			http.Error(w, `{"error":"Category not found"}`, http.StatusNotFound)
-			return
-		}
 		http.Error(w, `{"error":"Internal server error"}`, http.StatusInternalServerError)
 		return
 	}
@@ -119,7 +130,7 @@ func (h *handler) List(w http.ResponseWriter, r *http.Request) {
 
 func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	guidStr := vars["product_guid"]
+	guidStr := vars["guid"]
 
 	guid, err := uuid.Parse(guidStr)
 	if err != nil {
@@ -138,7 +149,12 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.serviceProduct.Update(r.Context(), guid, req)
+	if err := req.Validate(); err != nil {
+		http.Error(w, `{"error":"incorrect parameters"}`, http.StatusBadRequest)
+		return
+	}
+
+	product, err := h.serviceProduct.Update(r.Context(), guid, req)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
 			http.Error(w, `{"error":"Product not found"}`, http.StatusNotFound)
@@ -152,6 +168,16 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	resp := entity.ResponseProductUpdate{
+		GUID:         product.GUID,
+		Name:         product.Name,
+		Description:  product.Description,
+		Price:        product.Price,
+		CategoryGUID: product.CategoryGUID,
+		CreatedAt:    product.CreatedAt,
+		UpdatedAt:    product.UpdatedAt,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
@@ -161,7 +187,7 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 
 func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	guidStr := vars["product_guid"]
+	guidStr := vars["guid"]
 
 	guid, err := uuid.Parse(guidStr)
 	if err != nil {

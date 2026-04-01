@@ -3,6 +3,7 @@ package hcategory
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/chronos3344/catalog-service/internal/app/entity"
@@ -27,13 +28,8 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Name == "" {
-		http.Error(w, `{"error":"Name is required"}`, http.StatusBadRequest)
-		return
-	}
-
-	if len(req.Name) > 255 {
-		http.Error(w, `{"error":"Name too long"}`, http.StatusBadRequest)
+	if err := req.Validate(); err != nil {
+		http.Error(w, `{"error":"incorrect parameters"}`, http.StatusBadRequest)
 		return
 	}
 
@@ -49,21 +45,22 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	// Конвертируем entity в response DTO
 	resp := entity.ResponseCategoryCreate{
-		GUID: category.GUID,
-		Name: category.Name,
+		GUID:      category.GUID,
+		Name:      category.Name,
+		CreatedAt: category.CreatedAt,
+		UpdatedAt: category.UpdatedAt,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		http.Error(w, `{"error":"Failed to encode response"}`, http.StatusInternalServerError)
-		return
+		log.Printf("Failed to encode response: %v", err)
 	}
 }
 
-func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
+func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	guidStr := vars["category_guid"]
+	guidStr := vars["guid"]
 
 	guid, err := uuid.Parse(guidStr)
 	if err != nil {
@@ -83,8 +80,10 @@ func (h *handler) Get(w http.ResponseWriter, r *http.Request) {
 
 	// Конвертируем entity в response DTO
 	resp := entity.ResponseCategoryGet{
-		GUID: category.GUID,
-		Name: category.Name,
+		GUID:      category.GUID,
+		Name:      category.Name,
+		CreatedAt: category.CreatedAt,
+		UpdatedAt: category.UpdatedAt,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -105,8 +104,10 @@ func (h *handler) List(w http.ResponseWriter, r *http.Request) {
 	resp := make(entity.ResponseCategoryList, 0, len(categories))
 	for _, cat := range categories {
 		resp = append(resp, entity.ResponseCategoryGet{
-			GUID: cat.GUID,
-			Name: cat.Name,
+			GUID:      cat.GUID,
+			Name:      cat.Name,
+			CreatedAt: cat.CreatedAt,
+			UpdatedAt: cat.UpdatedAt,
 		})
 	}
 
@@ -119,7 +120,7 @@ func (h *handler) List(w http.ResponseWriter, r *http.Request) {
 
 func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	guidStr := vars["category_guid"]
+	guidStr := vars["guid"]
 
 	guid, err := uuid.Parse(guidStr)
 	if err != nil {
@@ -133,13 +134,8 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Name == "" {
-		http.Error(w, `{"error":"Name is required"}`, http.StatusBadRequest)
-		return
-	}
-
-	if len(req.Name) > 255 {
-		http.Error(w, `{"error":"Name too long"}`, http.StatusBadRequest)
+	if err := req.Validate(); err != nil {
+		http.Error(w, `{"error":"incorrect parameters"}`, http.StatusBadRequest)
 		return
 	}
 
@@ -159,8 +155,10 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 
 	// Конвертируем entity в response DTO
 	resp := entity.ResponseCategoryUpdate{
-		GUID: category.GUID,
-		Name: category.Name,
+		GUID:      category.GUID,
+		Name:      category.Name,
+		CreatedAt: category.CreatedAt,
+		UpdatedAt: category.UpdatedAt,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -172,7 +170,7 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 
 func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	guidStr := vars["category_guid"]
+	guidStr := vars["guid"]
 
 	guid, err := uuid.Parse(guidStr)
 	if err != nil {
@@ -184,6 +182,10 @@ func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
 			http.Error(w, `{"error":"Category not found"}`, http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, entity.ErrCategoryHasProducts) {
+			http.Error(w, `{"error":"category has linked products"}`, http.StatusBadRequest)
 			return
 		}
 		http.Error(w, `{"error":"Internal server error"}`, http.StatusInternalServerError)
