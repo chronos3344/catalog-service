@@ -1,0 +1,205 @@
+package hproduct
+
+import (
+	"encoding/json"
+	"errors"
+	"log"
+	"net/http"
+
+	"github.com/chronos3344/catalog-service/internal/app/entity"
+	"github.com/chronos3344/catalog-service/internal/app/handler"
+	"github.com/chronos3344/catalog-service/internal/app/service"
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
+)
+
+type handler struct {
+	serviceProduct service.Product
+}
+
+func NewHandler(serviceProduct service.Product) rhandler.Product {
+	return &handler{serviceProduct}
+}
+
+func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
+	var req entity.RequestProductCreate
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, `{"error":"Invalid request format"}`, http.StatusBadRequest)
+		return
+	}
+
+	if err := req.Validate(); err != nil {
+		http.Error(w, `{"error":"incorrect parameters"}`, http.StatusBadRequest)
+		return
+	}
+
+	product, err := h.serviceProduct.Create(r.Context(), req)
+	if err != nil {
+		if errors.Is(err, entity.ErrNotFound) {
+			http.Error(w, `{"error":"Category not found"}`, http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, entity.ErrAlreadyExists) {
+			http.Error(w, `{"error":"Product with this name already exists"}`, http.StatusConflict)
+			return
+		}
+		http.Error(w, `{"error":"Internal server error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	resp := entity.ResponseProductCreate{
+		GUID:         product.GUID,
+		Name:         product.Name,
+		Description:  product.Description,
+		Price:        product.Price,
+		CategoryGUID: product.CategoryGUID,
+		CreatedAt:    product.CreatedAt,
+		UpdatedAt:    product.UpdatedAt,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		return
+	}
+}
+
+func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	guidStr := vars["guid"]
+
+	guid, err := uuid.Parse(guidStr)
+	if err != nil {
+		http.Error(w, `{"error":"Invalid UUID format"}`, http.StatusBadRequest)
+		return
+	}
+
+	product, err := h.serviceProduct.Get(r.Context(), guid)
+	if err != nil {
+		if errors.Is(err, entity.ErrNotFound) {
+			http.Error(w, `{"error":"Product not found"}`, http.StatusNotFound)
+			return
+		}
+		http.Error(w, `{"error":"Internal server error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	resp := entity.ResponseProductGet{
+		GUID:         product.GUID,
+		Name:         product.Name,
+		Description:  product.Description,
+		Price:        product.Price,
+		CategoryGUID: product.CategoryGUID,
+		CreatedAt:    product.CreatedAt,
+		UpdatedAt:    product.UpdatedAt,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		return
+	}
+}
+
+func (h *handler) List(w http.ResponseWriter, r *http.Request) {
+	products, err := h.serviceProduct.List(r.Context())
+	if err != nil {
+		http.Error(w, `{"error":"Internal server error"}`, http.StatusInternalServerError)
+		return
+	}
+	resp := make(entity.ResponseProductList, 0, len(products))
+	for _, p := range products {
+		resp = append(resp, entity.ResponseProductGet{
+			GUID:         p.GUID,
+			Name:         p.Name,
+			Description:  p.Description,
+			Price:        p.Price,
+			CategoryGUID: p.CategoryGUID,
+			CreatedAt:    p.CreatedAt,
+			UpdatedAt:    p.UpdatedAt,
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		log.Printf("failed to encode response: %v", err)
+	}
+}
+
+func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	guidStr := vars["guid"]
+
+	guid, err := uuid.Parse(guidStr)
+	if err != nil {
+		http.Error(w, `{"error":"Invalid UUID format"}`, http.StatusBadRequest)
+		return
+	}
+
+	var req entity.RequestProductUpdate
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, `{"error":"Invalid request format"}`, http.StatusBadRequest)
+		return
+	}
+
+	if err := req.Validate(); err != nil {
+		http.Error(w, `{"error":"incorrect parameters"}`, http.StatusBadRequest)
+		return
+	}
+
+	product, err := h.serviceProduct.Update(r.Context(), guid, req)
+	if err != nil {
+		if errors.Is(err, entity.ErrNotFound) {
+			http.Error(w, `{"error":"Product not found"}`, http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, entity.ErrAlreadyExists) {
+			http.Error(w, `{"error":"Product with this name already exists"}`, http.StatusConflict)
+			return
+		}
+		http.Error(w, `{"error":"Internal server error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	resp := entity.ResponseProductUpdate{
+		GUID:         product.GUID,
+		Name:         product.Name,
+		Description:  product.Description,
+		Price:        product.Price,
+		CategoryGUID: product.CategoryGUID,
+		CreatedAt:    product.CreatedAt,
+		UpdatedAt:    product.UpdatedAt,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(resp)
+	if err != nil {
+		return
+	}
+}
+
+func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	guidStr := vars["guid"]
+
+	guid, err := uuid.Parse(guidStr)
+	if err != nil {
+		http.Error(w, `{"error":"Invalid UUID format"}`, http.StatusBadRequest)
+		return
+	}
+
+	err = h.serviceProduct.Delete(r.Context(), guid)
+	if err != nil {
+		if errors.Is(err, entity.ErrNotFound) {
+			http.Error(w, `{"error":"Product not found"}`, http.StatusNotFound)
+			return
+		}
+		http.Error(w, `{"error":"Internal server error"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

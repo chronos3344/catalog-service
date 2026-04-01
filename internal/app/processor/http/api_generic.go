@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/chronos3344/catalog-service/internal/app/handler"
+	rhandler "github.com/chronos3344/catalog-service/internal/app/handler"
 	"github.com/gorilla/mux"
 )
 
