@@ -34,16 +34,6 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Price <= 0 {
-		http.Error(w, `{"error":"Invalid price value"}`, http.StatusBadRequest)
-		return
-	}
-
-	if req.CategoryGUID == uuid.Nil {
-		http.Error(w, `{"error":"Category GUID is required"}`, http.StatusBadRequest)
-		return
-	}
-
 	product, err := h.serviceProduct.Create(r.Context(), req)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
@@ -114,17 +104,28 @@ func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) List(w http.ResponseWriter, r *http.Request) {
-	resp, err := h.serviceProduct.List(r.Context())
+	products, err := h.serviceProduct.List(r.Context())
 	if err != nil {
 		http.Error(w, `{"error":"Internal server error"}`, http.StatusInternalServerError)
 		return
+	}
+	resp := make(entity.ResponseProductList, 0, len(products))
+	for _, p := range products {
+		resp = append(resp, entity.ResponseProductGet{
+			GUID:         p.GUID,
+			Name:         p.Name,
+			Description:  p.Description,
+			Price:        p.Price,
+			CategoryGUID: p.CategoryGUID,
+			CreatedAt:    p.CreatedAt,
+			UpdatedAt:    p.UpdatedAt,
+		})
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		log.Printf("failed to encode response: %v", err)
-		return
 	}
 }
 
@@ -141,11 +142,6 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 	var req entity.RequestProductUpdate
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, `{"error":"Invalid request format"}`, http.StatusBadRequest)
-		return
-	}
-
-	if req.Price != nil && *req.Price <= 0 {
-		http.Error(w, `{"error":"Invalid price value"}`, http.StatusBadRequest)
 		return
 	}
 
