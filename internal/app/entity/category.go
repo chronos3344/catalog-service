@@ -18,26 +18,27 @@ type Category struct {
 }
 
 type ResponseCategoryCreate struct {
-	GUID uuid.UUID `json:"guid"`
-	Name string    `json:"name"`
+	GUID      uuid.UUID `json:"guid"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type ResponseCategoryGet struct {
-	GUID uuid.UUID `json:"guid"`
-	Name string    `json:"name"`
+	GUID      uuid.UUID `json:"guid"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type ResponseCategoryUpdate struct {
-	GUID uuid.UUID `json:"guid"`
-	Name string    `json:"name"`
+	GUID      uuid.UUID `json:"guid"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type ResponseCategoryList []ResponseCategoryGet
-
-////////////////////////////////////////////////////////////////////////////////
-///// HTTP REQUEST & RESPONSE //////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-
 type RequestCategoryCreate struct {
 	Name string `json:"name"`
 }
@@ -58,11 +59,4 @@ func (r RequestCategoryUpdate) Validate() error {
 		return ErrIncorrectParameters
 	}
 	return nil
-}
-
-type ResponseCategory struct {
-	GUID      uuid.UUID `json:"guid"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
 }

@@ -55,7 +55,27 @@ func (r RequestProductUpdate) Validate() error {
 	return nil
 }
 
-type ResponseProduct struct {
+type ResponseProductCreate struct {
+	GUID         uuid.UUID `json:"guid"`
+	Name         string    `json:"name"`
+	Description  *string   `json:"description"`
+	Price        float64   `json:"price"`
+	CategoryGUID uuid.UUID `json:"category_guid"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+type ResponseProductGet struct {
+	GUID         uuid.UUID `json:"guid"`
+	Name         string    `json:"name"`
+	Description  *string   `json:"description"`
+	Price        float64   `json:"price"`
+	CategoryGUID uuid.UUID `json:"category_guid"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+type ResponseProductUpdate struct {
 	GUID         uuid.UUID `json:"guid"`
 	Name         string    `json:"name"`
 	Description  *string   `json:"description"`
