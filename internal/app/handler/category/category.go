@@ -9,6 +9,7 @@ import (
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	"github.com/chronos3344/catalog-service/internal/app/handler"
 	"github.com/chronos3344/catalog-service/internal/app/service"
+	"github.com/chronos3344/catalog-service/pkg/http/httph"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
@@ -64,6 +65,7 @@ func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
 
 	guid, err := uuid.Parse(guidStr)
 	if err != nil {
+		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
 		http.Error(w, `{"error":"Invalid UUID format"}`, http.StatusBadRequest)
 		return
 	}
@@ -71,6 +73,7 @@ func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
 	category, err := h.serviceCategory.Get(r.Context(), guid)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
+			httph.ErrorApply(w, http.StatusNotFound, "Категория не найдена")
 			http.Error(w, `{"error":"Category not found"}`, http.StatusNotFound)
 			return
 		}
