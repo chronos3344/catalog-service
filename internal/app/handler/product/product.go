@@ -3,9 +3,11 @@ package hproduct
 import (
 	"encoding/json"
 	"errors"
-	"github.com/chronos3344/catalog-service/pkg/http/httph"
 	"log"
 	"net/http"
+
+	"github.com/chronos3344/catalog-service/internal/pkg/http/binding"
+	"github.com/chronos3344/catalog-service/internal/pkg/http/httph"
 
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	"github.com/chronos3344/catalog-service/internal/app/handler"
@@ -25,14 +27,7 @@ func NewHandler(serviceProduct service.Product) rhandler.Product {
 func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req entity.RequestProductCreate
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
-		httph.SendError(w, http.StatusBadRequest, entity.ErrIncorrectParameters)
-		return
-	}
-
-	if err := req.Validate(); err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
+	if err := binding.ScanAndValidateJSON(r, &req); err != nil {
 		httph.SendError(w, http.StatusBadRequest, entity.ErrIncorrectParameters)
 		return
 	}
@@ -148,14 +143,7 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req entity.RequestProductUpdate
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
-		httph.SendError(w, http.StatusBadRequest, entity.ErrIncorrectParameters)
-		return
-	}
-
-	if err := req.Validate(); err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
+	if err := binding.ScanAndValidateJSON(r, &req); err != nil {
 		httph.SendError(w, http.StatusBadRequest, entity.ErrIncorrectParameters)
 		return
 	}
