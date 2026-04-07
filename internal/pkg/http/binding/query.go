@@ -20,6 +20,7 @@ func (queryBinding) Bind(req *http.Request, obj any) error {
 
 	// 2. Декодируйте их через formDecoder.Decode(obj, values), обработайте ошибку
 	if err := formDecoder.Decode(obj, par); err != nil {
+		return err
 	}
 
 	return validate(obj)

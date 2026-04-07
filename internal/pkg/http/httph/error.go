@@ -12,7 +12,7 @@ type Error struct {
 // ErrorApply отправка ошибки с указанием статуса и сообщения
 func ErrorApply(w http.ResponseWriter, code int, message string) {
 	// Записываем заголовок
-	// Используем наш EncodeJSON
+	//  наш EncodeJSON
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(code)
 

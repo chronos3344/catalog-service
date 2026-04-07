@@ -38,7 +38,10 @@ func (v *defaultValidator) ValidateStruct(obj any) error {
 	// 3. Если это структура (.Kind() == reflect.Struct) — вызвать v.lazyInit() и v.validate.Struct(obj)
 	if val.Kind() == reflect.Struct {
 		v.lazyInit()
-		v.validate.Struct(obj)
+		err := v.validate.Struct(obj)
+		if err != nil {
+			return err
+		}
 	}
 
 	// 4. Если это не структура — вернуть nil
