@@ -38,10 +38,12 @@ type ResponseCategoryUpdate struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-type ResponseCategoryList []ResponseCategoryGet
-type RequestCategoryCreate struct {
-	Name string `json:"name" binding:"required,min=2,max=255"`
-}
+type (
+	ResponseCategoryList  []ResponseCategoryGet
+	RequestCategoryCreate struct {
+		Name string `json:"name" binding:"required,min=2,max=255"`
+	}
+)
 
 type RequestCategoryUpdate struct {
 	Name string `json:"name" binding:"required,min=2,max=255"`

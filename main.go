@@ -2,7 +2,8 @@ package main
 
 import (
 	"context"
-	//"log"
+	"github.com/uptrace/bun"
+
 	"os"
 	"os/signal"
 	"syscall"
@@ -34,7 +35,12 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to connect to PostgreSQL: %v")
 	}
-	defer pgClient.GetRawBunDB().Close()
+	defer func(db *bun.DB) {
+		err := db.Close()
+		if err != nil {
+
+		}
+	}(pgClient.GetRawBunDB())
 
 	// Применение миграций
 	oldVer, newVer, err := pgClient.Migrate(ctx)
@@ -90,6 +96,5 @@ func main() {
 
 	if err := server.Shutdown(ctxShutdown); err != nil {
 		log.Fatal().Err(err).Msg("Server shutdown:")
-
 	}
 }
