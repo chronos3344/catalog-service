@@ -53,7 +53,6 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	httph.SendEncoded(w, r, http.StatusCreated, resp)
-
 }
 
 func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
