@@ -27,7 +27,7 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req entity.RequestCategoryCreate
 
 	if err := binding.ScanAndValidateJSON(r, &req); err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат")
+		httph.ErrorApply(w, http.StatusBadRequest, "Неверный статус")
 		return
 	}
 
@@ -35,7 +35,7 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, entity.ErrAlreadyExists):
-			httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
+			httph.ErrorApply(w, http.StatusBadRequest, "Неверный статус")
 		default:
 			httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
 		}
@@ -52,9 +52,8 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		log.Printf("Failed to encode response: %v", err)
-	}
+	httph.SendEncoded(w, r, http.StatusCreated, resp)
+
 }
 
 func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
@@ -63,14 +62,14 @@ func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
 
 	guid, err := uuid.Parse(guidStr)
 	if err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
+		httph.ErrorApply(w, http.StatusBadRequest, "Неверный статус")
 		return
 	}
 
 	category, err := h.serviceCategory.Get(r.Context(), guid)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
-			httph.ErrorApply(w, http.StatusNotFound, "Категория не найдена")
+			httph.ErrorApply(w, http.StatusNotFound, "Статус не найден")
 			return
 		}
 		httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
@@ -121,20 +120,20 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 
 	guid, err := uuid.Parse(guidStr)
 	if err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
+		httph.ErrorApply(w, http.StatusBadRequest, "Неверный статус")
 		return
 	}
 
 	var req entity.RequestCategoryUpdate
 	if err := binding.ScanAndValidateJSON(r, &req); err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат")
+		httph.ErrorApply(w, http.StatusBadRequest, "Неверный статус")
 		return
 	}
 
 	category, err := h.serviceCategory.Update(r.Context(), guid, req.Name)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
-			httph.ErrorApply(w, http.StatusNotFound, "Категория не найдена")
+			httph.ErrorApply(w, http.StatusNotFound, "Статус не найден")
 			return
 		}
 		if errors.Is(err, entity.ErrAlreadyExists) {
@@ -165,18 +164,18 @@ func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	guid, err := uuid.Parse(guidStr)
 	if err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
+		httph.ErrorApply(w, http.StatusBadRequest, "Неверный статус")
 		return
 	}
 
 	err = h.serviceCategory.Delete(r.Context(), guid)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
-			httph.ErrorApply(w, http.StatusNotFound, "Категория не найдена")
+			httph.ErrorApply(w, http.StatusNotFound, "Статус не найден")
 			return
 		}
 		if errors.Is(err, entity.ErrCategoryHasProducts) {
-			httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
+			httph.ErrorApply(w, http.StatusBadRequest, "Неверный статус")
 			return
 		}
 		httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")

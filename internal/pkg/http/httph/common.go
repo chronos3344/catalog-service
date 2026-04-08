@@ -8,7 +8,7 @@ import (
 func SendRaw(w http.ResponseWriter, statusCode int, mimeType string, data []byte) {
 	// 1. Если mimeType не пустой, установите его в заголовок Content-Type
 	if mimeType != "" {
-		w.Header().Add("Content-Type", mimeType)
+		w.Header().Set("Content-Type", MIMEApplicationJSONCharsetUTF8)
 	}
 
 	// 2. Запишите статус код через w.WriteHeader(statusCode)
@@ -30,12 +30,12 @@ func SendEmpty(w http.ResponseWriter, statusCode int) {
 // SendEncodedWithMIME кодирует объект и отправляет с указанным MIME-типом
 func SendEncodedWithMIME(w http.ResponseWriter, r *http.Request, statusCode int, mimeType string, obj any) {
 	// Вызываем SendRaw и передаем только статус код и MIME.
-	SendRaw(w, statusCode, mimeType, nil)
+	SendRaw(w, statusCode, MIMEApplicationJSONCharsetUTF8, nil)
 
 	// Вызываем наш EncodeJSON и в случае ошибки вызываем ErrorApply.
 	err := EncodeJSON(w, obj)
 	if err != nil {
-		ErrorApply(w, statusCode, mimeType)
+		ErrorApply(w, http.StatusBadRequest, "Неверный формат")
 		return
 	}
 }
@@ -43,6 +43,6 @@ func SendEncodedWithMIME(w http.ResponseWriter, r *http.Request, statusCode int,
 // SendEncoded отправляет объект в формате JSON с указанным статус-кодом
 func SendEncoded(w http.ResponseWriter, r *http.Request, statusCode int, obj any) {
 	// Вызываем SendEncodedWithMIME и передаем нашу констату MIME с Application/JSON в UTF-8 (Такой формат используется в 90% случаев.)
-	SendEncodedWithMIME(w, r, statusCode, "application/json; charset=uf-8", obj)
+	SendEncodedWithMIME(w, r, statusCode, MIMEApplicationJSONCharsetUTF8, obj)
 	// А если нам пригодится что-то особенное, то просто вызовем SendEncodedWithMIME прямо в обработчике.
 }

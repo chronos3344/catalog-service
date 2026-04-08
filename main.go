@@ -47,9 +47,9 @@ func main() {
 	}
 
 	if oldVer != newVer {
-		log.Printf("Database migrated from version %d to %d", oldVer, newVer)
+		log.Info().Msgf("Database migrated from version %d to %d", oldVer, newVer)
 	} else {
-		log.Printf("Database is up to date, version: %d", newVer)
+		log.Info().Msgf("Database is up to date, version: %d", newVer)
 	}
 
 	// Repositories
@@ -70,7 +70,7 @@ func main() {
 
 	// Graceful shutdown
 	go func() {
-		log.Printf("Starting catalog-service on port %d...", cfg.Processor.WebServer.ListenPort)
+		log.Info().Msgf("Starting catalog-service on port %d...", cfg.Processor.WebServer.ListenPort)
 		if err := server.Serve(); err != nil {
 			log.Fatal().Err(err).Msg("Failed to start HTTP server")
 		}
@@ -80,7 +80,7 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Print("Shutting down server...")
+	log.Info().Msgf("Shutting down server...")
 
 	ctxShutdown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

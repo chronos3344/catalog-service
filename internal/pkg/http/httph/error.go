@@ -13,8 +13,8 @@ type Error struct {
 func ErrorApply(w http.ResponseWriter, code int, message string) {
 	// Записываем заголовок
 	//  наш EncodeJSON
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Content-Type", MIMEApplicationJSONCharsetUTF8)
 	w.WriteHeader(code)
 
-	_ = EncodeJSON(w, &Error{message})
+	_ = EncodeJSON(w, &Error{Message: message})
 }

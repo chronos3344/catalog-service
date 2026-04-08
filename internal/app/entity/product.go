@@ -25,14 +25,14 @@ type RequestProductCreate struct {
 	Name         string    `json:"name" binding:"required,min=2,max=255"`
 	Price        float64   `json:"price" binding:"required,gt=0"`
 	CategoryGUID uuid.UUID `json:"category_guid" binding:"required,uuid"`
-	Description  *string   `json:"description" binding:"required,min=2,max=255"`
+	Description  *string   `json:"description" binding:"omitempty,min=2,max=255"`
 }
 
 type RequestProductUpdate struct {
-	Name         *string    `json:"name" binding:"required,min=2,max=255"`
-	Price        *float64   `json:"price" binding:"required,gt=0"`
-	CategoryGUID *uuid.UUID `json:"category_guid" binding:"required,uuid"`
-	Description  *string    `json:"description" binding:"required,min=2,max=255"`
+	Name         *string    `json:"name" binding:"omitempty,min=2,max=255"`
+	Price        *float64   `json:"price" binding:"omitempty,gt=0"`
+	CategoryGUID *uuid.UUID `json:"category_guid" binding:"omitempty"`
+	Description  *string    `json:"description" binding:"omitempty,min=2,max=255"`
 }
 
 type ResponseProductCreate struct {
