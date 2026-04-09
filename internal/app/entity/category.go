@@ -38,25 +38,13 @@ type ResponseCategoryUpdate struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-type ResponseCategoryList []ResponseCategoryGet
-type RequestCategoryCreate struct {
-	Name string `json:"name"`
-}
-
-func (r RequestCategoryCreate) Validate() error {
-	if r.Name == "" {
-		return ErrIncorrectParameters
+type (
+	ResponseCategoryList  []ResponseCategoryGet
+	RequestCategoryCreate struct {
+		Name string `json:"name" binding:"required,min=2,max=255"`
 	}
-	return nil
-}
+)
 
 type RequestCategoryUpdate struct {
-	Name string `json:"name"`
-}
-
-func (r RequestCategoryUpdate) Validate() error {
-	if r.Name == "" {
-		return ErrIncorrectParameters
-	}
-	return nil
+	Name string `json:"name" binding:"required,min=2,max=255"`
 }
