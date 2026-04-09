@@ -1,9 +1,7 @@
 package hproduct
 
 import (
-	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/chronos3344/catalog-service/internal/app/entity"
@@ -27,7 +25,7 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req entity.RequestProductCreate
 
 	if err := binding.ScanAndValidateJSON(r, &req); err != nil {
-		httph.ErrorApply(w, http.StatusNotFound, "Неверный формат")
+		httph.ErrorApply(w, http.StatusNotFound, "Категория не найдена")
 		return
 	}
 
@@ -56,11 +54,7 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	err = json.NewEncoder(w).Encode(resp)
-	if err != nil {
-		return
-	}
+	httph.SendEncoded(w, r, http.StatusCreated, resp)
 }
 
 func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +70,7 @@ func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
 	product, err := h.serviceProduct.Get(r.Context(), guid)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
-			httph.ErrorApply(w, http.StatusNotFound, "Продукт не найден")
+			httph.ErrorApply(w, http.StatusNotFound, "Категория не найдена")
 			return
 		}
 		httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
@@ -94,10 +88,7 @@ func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(resp)
-	if err != nil {
-		return
-	}
+	httph.SendEncoded(w, r, http.StatusCreated, resp)
 }
 
 func (h *handler) List(w http.ResponseWriter, r *http.Request) {
@@ -120,10 +111,7 @@ func (h *handler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(resp)
-	if err != nil {
-		log.Printf("failed to encode response: %v", err)
-	}
+	httph.SendEncoded(w, r, http.StatusCreated, resp)
 }
 
 func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
@@ -138,14 +126,14 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 
 	var req entity.RequestProductUpdate
 	if err := binding.ScanAndValidateJSON(r, &req); err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат")
+		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
 		return
 	}
 
 	product, err := h.serviceProduct.Update(r.Context(), guid, req)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
-			httph.ErrorApply(w, http.StatusNotFound, "Продукт не найден")
+			httph.ErrorApply(w, http.StatusNotFound, "Категория не найдена")
 			return
 		}
 		if errors.Is(err, entity.ErrAlreadyExists) {
@@ -167,10 +155,7 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(resp)
-	if err != nil {
-		return
-	}
+	httph.SendEncoded(w, r, http.StatusCreated, resp)
 }
 
 func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
@@ -186,7 +171,7 @@ func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
 	err = h.serviceProduct.Delete(r.Context(), guid)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
-			httph.ErrorApply(w, http.StatusNotFound, "Продукт не найден")
+			httph.ErrorApply(w, http.StatusNotFound, "Категория не найдена")
 			return
 		}
 		httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")

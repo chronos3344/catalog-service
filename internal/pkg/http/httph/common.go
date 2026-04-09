@@ -8,7 +8,7 @@ import (
 func SendRaw(w http.ResponseWriter, statusCode int, mimeType string, data []byte) {
 	// 1. Если mimeType не пустой, установите его в заголовок Content-Type
 	if mimeType != "" {
-		w.Header().Set("Content-Type", MIMEApplicationJSONCharsetUTF8)
+		w.Header().Set("Content-Type", mimeType)
 	}
 
 	// 2. Запишите статус код через w.WriteHeader(statusCode)
@@ -30,7 +30,7 @@ func SendEmpty(w http.ResponseWriter, statusCode int) {
 // SendEncodedWithMIME кодирует объект и отправляет с указанным MIME-типом
 func SendEncodedWithMIME(w http.ResponseWriter, r *http.Request, statusCode int, mimeType string, obj any) {
 	// Вызываем SendRaw и передаем только статус код и MIME.
-	SendRaw(w, statusCode, MIMEApplicationJSONCharsetUTF8, nil)
+	SendRaw(w, statusCode, mimeType, nil)
 
 	// Вызываем наш EncodeJSON и в случае ошибки вызываем ErrorApply.
 	err := EncodeJSON(w, obj)
