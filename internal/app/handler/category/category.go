@@ -25,7 +25,7 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req entity.RequestCategoryCreate
 
 	if err := binding.ScanAndValidateJSON(r, &req); err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
+		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат запроса")
 		return
 	}
 
@@ -33,7 +33,7 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, entity.ErrAlreadyExists):
-			httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
+			httph.ErrorApply(w, http.StatusBadRequest, "Категория с таким именем уже существует")
 		default:
 			httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
 		}
@@ -48,7 +48,6 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: category.UpdatedAt,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	httph.SendEncoded(w, r, http.StatusCreated, resp)
 }
 
@@ -80,8 +79,7 @@ func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: category.UpdatedAt,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	httph.SendEncoded(w, r, http.StatusCreated, resp)
+	httph.SendEncoded(w, r, http.StatusOK, resp)
 }
 
 func (h *handler) List(w http.ResponseWriter, r *http.Request) {
@@ -102,8 +100,7 @@ func (h *handler) List(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	httph.SendEncoded(w, r, http.StatusCreated, resp)
+	httph.SendEncoded(w, r, http.StatusOK, resp)
 }
 
 func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
@@ -118,7 +115,7 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 
 	var req entity.RequestCategoryUpdate
 	if err := binding.ScanAndValidateJSON(r, &req); err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
+		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат запроса")
 		return
 	}
 
@@ -129,7 +126,7 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if errors.Is(err, entity.ErrAlreadyExists) {
-			httph.ErrorApply(w, http.StatusConflict, "Товар с таким названием уже существует")
+			httph.ErrorApply(w, http.StatusConflict, "Категория с таким названием уже существует")
 			return
 		}
 		httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
@@ -144,8 +141,7 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: category.UpdatedAt,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	httph.SendEncoded(w, r, http.StatusCreated, resp)
+	httph.SendEncoded(w, r, http.StatusOK, resp)
 }
 
 func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
@@ -165,7 +161,7 @@ func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if errors.Is(err, entity.ErrCategoryHasProducts) {
-			httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
+			httph.ErrorApply(w, http.StatusConflict, "Нельзя удалить категорию с товарами")
 			return
 		}
 		httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
