@@ -29,5 +29,4 @@ func Load() (*Config, error) {
 	Root = cfg
 	log.Println("Config loaded successfully")
 	return &cfg, nil
-
 }

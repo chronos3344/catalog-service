@@ -22,37 +22,17 @@ type Product struct {
 
 // RequestProductCreate - модель для создания продукта
 type RequestProductCreate struct {
-	Name         string    `json:"name"`
-	Price        float64   `json:"price"`
-	CategoryGUID uuid.UUID `json:"category_guid"`
-	Description  *string   `json:"description"`
-}
-
-func (r RequestProductCreate) Validate() error {
-	if r.Name == "" || r.Price <= 0 || r.CategoryGUID == uuid.Nil {
-		return ErrIncorrectParameters
-	}
-	return nil
+	Name         string    `json:"name" binding:"required,min=2,max=255"`
+	Price        float64   `json:"price" binding:"required,gt=0"`
+	CategoryGUID uuid.UUID `json:"category_guid" binding:"required,uuid"`
+	Description  *string   `json:"description" binding:"omitempty,min=2,max=255"`
 }
 
 type RequestProductUpdate struct {
-	Name         *string    `json:"name"`
-	Price        *float64   `json:"price"`
-	CategoryGUID *uuid.UUID `json:"category_guid"`
-	Description  *string    `json:"description"`
-}
-
-func (r RequestProductUpdate) Validate() error {
-	if r.Name != nil && *r.Name == "" {
-		return ErrIncorrectParameters
-	}
-	if r.Price != nil && *r.Price <= 0 {
-		return ErrIncorrectParameters
-	}
-	if r.CategoryGUID != nil && *r.CategoryGUID == uuid.Nil {
-		return ErrIncorrectParameters
-	}
-	return nil
+	Name         *string    `json:"name" binding:"omitempty,min=2,max=255"`
+	Price        *float64   `json:"price" binding:"omitempty,gt=0"`
+	CategoryGUID *uuid.UUID `json:"category_guid" binding:"omitempty"`
+	Description  *string    `json:"description" binding:"omitempty,min=2,max=255"`
 }
 
 type ResponseProductCreate struct {

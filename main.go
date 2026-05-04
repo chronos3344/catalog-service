@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	//"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -24,7 +23,7 @@ import (
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to load config: %v")
+		log.Fatal().Err(err).Msg("Failed to load config")
 	}
 
 	ctx := context.Background()
@@ -32,32 +31,30 @@ func main() {
 	// Создаем подключение к PostgreSQL
 	pgClient, err := rcpostgres.NewConn(ctx, cfg.Repository.Postgres)
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to connect to PostgreSQL: %v")
+		log.Fatal().Err(err).Msg("Failed to connect to PostgreSQL")
 	}
-	defer pgClient.GetRawBunDB().Close()
+
+	defer func() {
+		if err := pgClient.GetRawBunDB().Close(); err != nil {
+			log.Error().Err(err).Msg("Failed to close database connection")
+		}
+	}()
 
 	// Применение миграций
 	oldVer, newVer, err := pgClient.Migrate(ctx)
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to run migrations: %v")
+		log.Error().Err(err).Msg("Failed to run migrations")
 	}
 
 	if oldVer != newVer {
-		log.Printf("Database migrated from version %d to %d", oldVer, newVer)
+		log.Info().Msgf("Database migrated from version %d to %d", oldVer, newVer)
 	} else {
-		log.Printf("Database is up to date, version: %d", newVer)
+		log.Info().Msgf("Database is up to date, version: %d", newVer)
 	}
 
 	// Repositories
 	categoryRepo := pcategory.NewRepoFromPostgres(pgClient)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to create category repository: %v")
-	}
-
 	productRepo := pproduct.NewRepoFromPostgres(pgClient)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to create product repository: %v")
-	}
 
 	// Services
 	categoryService := mcategory.NewService(categoryRepo, productRepo)
@@ -68,14 +65,14 @@ func main() {
 	productHandler := hproduct.NewHandler(productService)
 	healthHandler := rhealth.NewHandler()
 
-	// Server - создаем роутер и регистрируем все обработчики
+	// Server
 	server := rprocessor.NewHttp(healthHandler, categoryHandler, productHandler, cfg.Processor.WebServer)
 
 	// Graceful shutdown
 	go func() {
-		log.Printf("Starting catalog-service on port %d...", cfg.Processor.WebServer.ListenPort)
+		log.Info().Msgf("Starting catalog-service on port %d...", cfg.Processor.WebServer.ListenPort)
 		if err := server.Serve(); err != nil {
-			log.Fatal().Err(err).Msg("Failed to start HTTP server: %v")
+			log.Fatal().Err(err).Msg("Failed to start HTTP server")
 		}
 	}()
 
@@ -83,13 +80,12 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Print("Shutting down server...")
+	log.Info().Msgf("Shutting down server...")
 
 	ctxShutdown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := server.Shutdown(ctxShutdown); err != nil {
-		log.Fatal().Err(err).Msg("Server shutdown:")
-
+		log.Error().Err(err).Msg("Server shutdown error")
 	}
 }

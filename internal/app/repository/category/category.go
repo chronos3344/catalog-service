@@ -49,7 +49,6 @@ func (r *repoPg) List(ctx context.Context, name *string) ([]entity.Category, err
 	}
 
 	err := query.Scan(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to list categories: %w", err)
 	}

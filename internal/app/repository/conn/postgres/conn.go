@@ -65,7 +65,6 @@ func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, erro
 
 	if err := rawBunDB.PingContext(ctx); err != nil {
 		return nil, fmt.Errorf("failed to ping connection: %w", err)
-
 	}
 	client := &Client{
 		rawBunDB: rawBunDB,

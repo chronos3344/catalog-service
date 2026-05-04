@@ -1,14 +1,14 @@
 package hcategory
 
 import (
-	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/chronos3344/catalog-service/internal/app/entity"
 	"github.com/chronos3344/catalog-service/internal/app/handler"
 	"github.com/chronos3344/catalog-service/internal/app/service"
+	"github.com/chronos3344/catalog-service/internal/pkg/http/binding"
+	"github.com/chronos3344/catalog-service/internal/pkg/http/httph"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
@@ -23,23 +23,20 @@ func NewHandler(serviceCategory service.Category) rhandler.Category {
 
 func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req entity.RequestCategoryCreate
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, `{"error":"Invalid request format"}`, http.StatusBadRequest)
-		return
-	}
 
-	if err := req.Validate(); err != nil {
-		http.Error(w, `{"error":"incorrect parameters"}`, http.StatusBadRequest)
+	if err := binding.ScanAndValidateJSON(r, &req); err != nil {
+		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат запроса")
 		return
 	}
 
 	category, err := h.serviceCategory.Create(r.Context(), req.Name)
 	if err != nil {
-		if errors.Is(err, entity.ErrAlreadyExists) {
-			http.Error(w, `{"error":"Category with this name already exists"}`, http.StatusConflict)
-			return
+		switch {
+		case errors.Is(err, entity.ErrAlreadyExists):
+			httph.ErrorApply(w, http.StatusBadRequest, "Категория с таким именем уже существует")
+		default:
+			httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
 		}
-		http.Error(w, `{"error":"Internal server error"}`, http.StatusInternalServerError)
 		return
 	}
 
@@ -51,11 +48,7 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: category.UpdatedAt,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		log.Printf("Failed to encode response: %v", err)
-	}
+	httph.SendEncoded(w, r, http.StatusCreated, resp)
 }
 
 func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
@@ -64,17 +57,17 @@ func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
 
 	guid, err := uuid.Parse(guidStr)
 	if err != nil {
-		http.Error(w, `{"error":"Invalid UUID format"}`, http.StatusBadRequest)
+		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
 		return
 	}
 
 	category, err := h.serviceCategory.Get(r.Context(), guid)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
-			http.Error(w, `{"error":"Category not found"}`, http.StatusNotFound)
+			httph.ErrorApply(w, http.StatusNotFound, "Категория не найдена")
 			return
 		}
-		http.Error(w, `{"error":"Internal server error"}`, http.StatusInternalServerError)
+		httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
 		return
 	}
 
@@ -86,16 +79,13 @@ func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: category.UpdatedAt,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		log.Printf("Failed to encode response: %v", err)
-	}
+	httph.SendEncoded(w, r, http.StatusOK, resp)
 }
 
 func (h *handler) List(w http.ResponseWriter, r *http.Request) {
 	categories, err := h.serviceCategory.List(r.Context())
 	if err != nil {
-		http.Error(w, `{"error":"Internal server error"}`, http.StatusInternalServerError)
+		httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
 		return
 	}
 
@@ -110,10 +100,7 @@ func (h *handler) List(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		log.Printf("Failed to encode response: %v", err)
-	}
+	httph.SendEncoded(w, r, http.StatusOK, resp)
 }
 
 func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
@@ -122,32 +109,27 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 
 	guid, err := uuid.Parse(guidStr)
 	if err != nil {
-		http.Error(w, `{"error":"Invalid UUID format"}`, http.StatusBadRequest)
+		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
 		return
 	}
 
 	var req entity.RequestCategoryUpdate
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, `{"error":"Invalid request format"}`, http.StatusBadRequest)
-		return
-	}
-
-	if err := req.Validate(); err != nil {
-		http.Error(w, `{"error":"incorrect parameters"}`, http.StatusBadRequest)
+	if err := binding.ScanAndValidateJSON(r, &req); err != nil {
+		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат запроса")
 		return
 	}
 
 	category, err := h.serviceCategory.Update(r.Context(), guid, req.Name)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
-			http.Error(w, `{"error":"Category not found"}`, http.StatusNotFound)
+			httph.ErrorApply(w, http.StatusNotFound, "Категория не найдена")
 			return
 		}
 		if errors.Is(err, entity.ErrAlreadyExists) {
-			http.Error(w, `{"error":"Category with this name already exists"}`, http.StatusConflict)
+			httph.ErrorApply(w, http.StatusConflict, "Категория с таким названием уже существует")
 			return
 		}
-		http.Error(w, `{"error":"Internal server error"}`, http.StatusInternalServerError)
+		httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
 		return
 	}
 
@@ -159,10 +141,7 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: category.UpdatedAt,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		log.Printf("Failed to encode response: %v", err)
-	}
+	httph.SendEncoded(w, r, http.StatusOK, resp)
 }
 
 func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
@@ -171,21 +150,21 @@ func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	guid, err := uuid.Parse(guidStr)
 	if err != nil {
-		http.Error(w, `{"error":"Invalid UUID format"}`, http.StatusBadRequest)
+		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
 		return
 	}
 
 	err = h.serviceCategory.Delete(r.Context(), guid)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
-			http.Error(w, `{"error":"Category not found"}`, http.StatusNotFound)
+			httph.ErrorApply(w, http.StatusNotFound, "Категория не найдена")
 			return
 		}
 		if errors.Is(err, entity.ErrCategoryHasProducts) {
-			http.Error(w, `{"error":"category has linked products"}`, http.StatusBadRequest)
+			httph.ErrorApply(w, http.StatusConflict, "Нельзя удалить категорию с товарами")
 			return
 		}
-		http.Error(w, `{"error":"Internal server error"}`, http.StatusInternalServerError)
+		httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
 		return
 	}
 
