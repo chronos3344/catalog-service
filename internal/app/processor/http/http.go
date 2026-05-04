@@ -2,14 +2,14 @@ package rprocessor
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/chronos3344/catalog-service/internal/app/config/section"
 	rhandler "github.com/chronos3344/catalog-service/internal/app/handler"
 	"github.com/gorilla/mux"
+	"github.com/rs/zerolog/log"
 )
 
 type httpProc struct {
@@ -39,11 +39,12 @@ func NewHttp(hHealth rhandler.Health, hCategory rhandler.Category, hProduct rhan
 	_ = r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 		pathTemplate, _ := route.GetPathTemplate()
 		methods, _ := route.GetMethods()
-		log.Printf("Registered route: %s %s", methods, pathTemplate)
+		log.Info().Str("path_template", pathTemplate).Strs("methods", methods).Msg("Registered route")
 		return nil
 	})
 
-	addr := fmt.Sprintf(":%d", cfg.ListenPort)
+	addr := ":" + strconv.Itoa(cfg.ListenPort)
+	log.Info().Int("listen_port", cfg.ListenPort).Msg("Listening on" + addr)
 
 	return &httpProc{
 		server: &http.Server{
@@ -58,11 +59,11 @@ func NewHttp(hHealth rhandler.Health, hCategory rhandler.Category, hProduct rhan
 }
 
 func (h *httpProc) Serve() error {
-	log.Printf("Starting HTTP server on %s", h.server.Addr)
+	log.Info().Msg("Starting HTTP server")
 	return h.server.ListenAndServe()
 }
 
 func (h *httpProc) Shutdown(ctx context.Context) error {
-	log.Println("Shutting down HTTP server...")
+	log.Info().Msg("Shutting down HTTP server...")
 	return h.server.Shutdown(ctx)
 }

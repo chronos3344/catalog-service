@@ -10,6 +10,7 @@ import (
 
 	"github.com/chronos3344/catalog-service/internal/app/config/section"
 	"github.com/chronos3344/catalog-service/migration"
+	"github.com/rs/zerolog/log"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
@@ -30,7 +31,7 @@ func (c *Client) GetRawBunDB() *bun.DB {
 	return c.rawBunDB
 }
 
-func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, error) {
+func NewClient(ctx context.Context, cfg section.RepositoryPostgres) (*Client, error) {
 	var u url.URL
 	u.Scheme = "postgres"
 	u.Host = cfg.Address
@@ -42,10 +43,9 @@ func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, erro
 	u.RawQuery = args.Encode()
 
 	dsn := u.String()
-	fmt.Printf("PostgreSQL connection URL: %s\n", dsn)
+	log.Info().Str("dsn", dsn).Msg("PostgreSQL connection URL:")
 
-	fmt.Printf("PostgreSQL connection timeouts - Read: %v, Write: %v\n",
-		cfg.ReadTimeout, cfg.WriteTimeout)
+	log.Info().Str("read_timeout", cfg.ReadTimeout.String()).Str("write_timeout", cfg.WriteTimeout.String()).Msg("PostgreSQL connection timeouts")
 
 	sqlDB := sql.OpenDB(pgdriver.NewConnector(
 		pgdriver.WithDSN(dsn),
