@@ -25,7 +25,7 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req entity.RequestCategoryCreate
 
 	if err := binding.ScanAndValidateJSON(r, &req); err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат запроса")
+		httph.HandleError(w, r, httph.NewHTTPError(http.StatusBadRequest, "Неверный формат запроса"))
 		return
 	}
 
@@ -33,9 +33,9 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, entity.ErrAlreadyExists):
-			httph.ErrorApply(w, http.StatusBadRequest, "Категория с таким именем уже существует")
+			httph.HandleError(w, r, httph.NewHTTPError(http.StatusBadRequest, "Категория с таким именем уже существует"))
 		default:
-			httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
+			httph.HandleError(w, r, httph.NewHTTPError(http.StatusInternalServerError, "Ошибка сервера"))
 		}
 		return
 	}
@@ -57,17 +57,17 @@ func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
 
 	guid, err := uuid.Parse(guidStr)
 	if err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
+		httph.HandleError(w, r, httph.NewHTTPError(http.StatusBadRequest, "Неверный формат UUID"))
 		return
 	}
 
 	category, err := h.serviceCategory.Get(r.Context(), guid)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
-			httph.ErrorApply(w, http.StatusNotFound, "Категория не найдена")
+			httph.HandleError(w, r, httph.NewHTTPError(http.StatusNotFound, "Категория не найдена"))
 			return
 		}
-		httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
+		httph.HandleError(w, r, httph.NewHTTPError(http.StatusInternalServerError, "Ошибка сервера"))
 		return
 	}
 
@@ -85,7 +85,7 @@ func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
 func (h *handler) List(w http.ResponseWriter, r *http.Request) {
 	categories, err := h.serviceCategory.List(r.Context())
 	if err != nil {
-		httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
+		httph.HandleError(w, r, httph.NewHTTPError(http.StatusInternalServerError, "Ошибка сервера"))
 		return
 	}
 
@@ -109,27 +109,27 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 
 	guid, err := uuid.Parse(guidStr)
 	if err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
+		httph.HandleError(w, r, httph.NewHTTPError(http.StatusBadRequest, "Неверный формат UUID"))
 		return
 	}
 
 	var req entity.RequestCategoryUpdate
 	if err := binding.ScanAndValidateJSON(r, &req); err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат запроса")
+		httph.HandleError(w, r, httph.NewHTTPError(http.StatusBadRequest, "Неверный формат запроса"))
 		return
 	}
 
 	category, err := h.serviceCategory.Update(r.Context(), guid, req.Name)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
-			httph.ErrorApply(w, http.StatusNotFound, "Категория не найдена")
+			httph.HandleError(w, r, httph.NewHTTPError(http.StatusNotFound, "Категория не найдена"))
 			return
 		}
 		if errors.Is(err, entity.ErrAlreadyExists) {
-			httph.ErrorApply(w, http.StatusConflict, "Категория с таким названием уже существует")
+			httph.HandleError(w, r, httph.NewHTTPError(http.StatusConflict, "Категория с таким названием уже существует"))
 			return
 		}
-		httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
+		httph.HandleError(w, r, httph.NewHTTPError(http.StatusInternalServerError, "Ошибка сервера"))
 		return
 	}
 
@@ -150,21 +150,21 @@ func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	guid, err := uuid.Parse(guidStr)
 	if err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
+		httph.HandleError(w, r, httph.NewHTTPError(http.StatusBadRequest, "Неверный формат UUID"))
 		return
 	}
 
 	err = h.serviceCategory.Delete(r.Context(), guid)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
-			httph.ErrorApply(w, http.StatusNotFound, "Категория не найдена")
+			httph.HandleError(w, r, httph.NewHTTPError(http.StatusNotFound, "Категория не найдена"))
 			return
 		}
 		if errors.Is(err, entity.ErrCategoryHasProducts) {
-			httph.ErrorApply(w, http.StatusConflict, "Нельзя удалить категорию с товарами")
+			httph.HandleError(w, r, httph.NewHTTPError(http.StatusConflict, "Нельзя удалить категорию с товарами"))
 			return
 		}
-		httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
+		httph.HandleError(w, r, httph.NewHTTPError(http.StatusInternalServerError, "Ошибка сервера"))
 		return
 	}
 
