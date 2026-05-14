@@ -1,6 +1,7 @@
 package httph
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 )
@@ -41,5 +42,21 @@ func HandleError(w http.ResponseWriter, r *http.Request, err error) {
 		return
 	}
 	ErrorApplyStatusCode(r, http.StatusInternalServerError)
-	sendError(w, http.StatusInternalServerError, err)
+	sendError(w, http.StatusInternalServerError, hc)
+}
+
+func sendError(w http.ResponseWriter, status int, hc httpCoder) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+
+	response := map[string]interface{}{
+		"error": map[string]interface{}{
+			"status":  status,
+			"message": hc.Error(),
+		},
+	}
+	err := json.NewEncoder(w).Encode(response)
+	if err != nil {
+		return
+	}
 }

@@ -8,6 +8,9 @@ import (
 
 	"github.com/chronos3344/catalog-service/internal/app/config/section"
 	rhandler "github.com/chronos3344/catalog-service/internal/app/handler"
+	"github.com/chronos3344/catalog-service/internal/app/util"
+	"github.com/chronos3344/catalog-service/internal/pkg/http/httph"
+	"github.com/chronos3344/catalog-service/internal/pkg/http/mzerolog"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
@@ -19,6 +22,13 @@ type httpProc struct {
 func NewHttp(hHealth rhandler.Health, hCategory rhandler.Category, hProduct rhandler.Product, cfg section.ProcessorWebServer) *httpProc {
 	r := mux.NewRouter()
 	r.NotFoundHandler = http.HandlerFunc(handlerNotFound)
+
+	r.Use(
+		httph.NewErrorMiddleware(),
+		mzerolog.NewMiddleware(
+			mzerolog.WithSkipper(util.IsFilteredHttpRoute),
+		),
+	)
 
 	// Регистрируем health check
 	if hHealth != nil {

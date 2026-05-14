@@ -33,7 +33,7 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, entity.ErrAlreadyExists):
-			httph.HandleError(w, r, httph.NewHTTPError(http.StatusBadRequest, "Категория с таким именем уже существует"))
+			httph.HandleError(w, r, httph.NewHTTPError(http.StatusConflict, "Товар с таким названием уже существует"))
 		default:
 			httph.HandleError(w, r, httph.NewHTTPError(http.StatusInternalServerError, "Ошибка сервера"))
 		}
@@ -126,7 +126,7 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if errors.Is(err, entity.ErrAlreadyExists) {
-			httph.HandleError(w, r, httph.NewHTTPError(http.StatusConflict, "Категория с таким названием уже существует"))
+			httph.HandleError(w, r, httph.NewHTTPError(http.StatusConflict, "Товар с таким названием уже существует"))
 			return
 		}
 		httph.HandleError(w, r, httph.NewHTTPError(http.StatusInternalServerError, "Ошибка сервера"))
