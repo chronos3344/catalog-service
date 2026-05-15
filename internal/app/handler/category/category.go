@@ -40,7 +40,6 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Конвертируем entity в response DTO
 	resp := entity.ResponseCategoryCreate{
 		GUID:      category.GUID,
 		Name:      category.Name,
@@ -71,7 +70,6 @@ func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Конвертируем entity в response DTO
 	resp := entity.ResponseCategoryGet{
 		GUID:      category.GUID,
 		Name:      category.Name,
@@ -89,7 +87,6 @@ func (h *handler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Конвертируем []entity.Category в entity.ResponseCategoryList
 	resp := make(entity.ResponseCategoryList, 0, len(categories))
 	for _, cat := range categories {
 		resp = append(resp, entity.ResponseCategoryGet{
@@ -133,7 +130,6 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Конвертируем entity в response DTO
 	resp := entity.ResponseCategoryUpdate{
 		GUID:      category.GUID,
 		Name:      category.Name,

@@ -15,7 +15,6 @@ func WithLogger(l zerolog.Logger) Option {
 }
 
 func WithSkipper(skipper func(r *http.Request) bool) Option {
-	// TODO: Установите m.fromOptions.skipper, если skipper != nil
 	return func(m *middleware) {
 		if skipper != nil {
 			m.fromOptions.skipper = skipper

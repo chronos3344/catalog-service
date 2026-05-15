@@ -30,12 +30,10 @@ func NewHttp(hHealth rhandler.Health, hCategory rhandler.Category, hProduct rhan
 		),
 	)
 
-	// Регистрируем health check
 	if hHealth != nil {
 		vGenericRegHealthCheck(r, hHealth)
 	}
 
-	// API version 1
 	rV1 := r.PathPrefix("/v1").Subrouter()
 
 	if hCategory != nil {
@@ -45,7 +43,6 @@ func NewHttp(hHealth rhandler.Health, hCategory rhandler.Category, hProduct rhan
 		v1RegProductHandler(rV1, hProduct)
 	}
 
-	// Логируем все зарегистрированные маршруты
 	_ = r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 		pathTemplate, _ := route.GetPathTemplate()
 		methods, _ := route.GetMethods()

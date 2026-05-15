@@ -42,21 +42,18 @@ func HandleError(w http.ResponseWriter, r *http.Request, err error) {
 		return
 	}
 	ErrorApplyStatusCode(r, http.StatusInternalServerError)
-	sendError(w, http.StatusInternalServerError, hc)
+	sendError(w, http.StatusInternalServerError, err)
 }
 
-func sendError(w http.ResponseWriter, status int, hc httpCoder) {
+func sendError(w http.ResponseWriter, status int, err error) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 
 	response := map[string]interface{}{
 		"error": map[string]interface{}{
 			"status":  status,
-			"message": hc.Error(),
+			"message": err.Error(),
 		},
 	}
-	err := json.NewEncoder(w).Encode(response)
-	if err != nil {
-		return
-	}
+	_ = json.NewEncoder(w).Encode(response)
 }
