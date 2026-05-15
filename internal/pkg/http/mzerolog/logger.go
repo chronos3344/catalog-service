@@ -67,9 +67,9 @@ func NewMiddleware(opts ...Option) httph.Middleware {
 	for _, opt := range opts {
 		opt(&m)
 	}
-
 	return m.Callback
 }
+
 func defaultSkipper(_ *http.Request) bool {
 	return false
 }
