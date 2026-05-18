@@ -111,10 +111,15 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProd
 }
 
 func (s *srv) Delete(ctx context.Context, guid uuid.UUID) error {
-	_, err := s.repoProduct.GetByGUID(ctx, guid)
+	err := s.repoProduct.InsideTx(ctx, func(ctx context.Context) error {
+		_, err := s.repoProduct.GetByGUID(ctx, guid)
+		if err != nil {
+			return err
+		}
+		return s.repoProduct.Delete(ctx, guid)
+	})
 	if err != nil {
 		return err
 	}
-
-	return s.repoProduct.Delete(ctx, guid)
+	return nil
 }
