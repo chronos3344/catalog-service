@@ -119,8 +119,6 @@ func (c *Client) Migrate(ctx context.Context) (oldVer, newVer int64, err error) 
 }
 
 func (c *Client) InsideTx(ctx context.Context, fn func(ctx context.Context) error) error {
-	// ШАГ 1 — Проверка вложенности.
-	// Если в контексте уже есть транзакция, просто выполняем fn(ctx) — повторная транзакция не нужна.
 	tx := getTxFromContext(ctx)
 	if tx.Tx != nil {
 		return fn(ctx)
@@ -154,6 +152,8 @@ func (c *Client) InsideTx(ctx context.Context, fn func(ctx context.Context) erro
 	}
 
 	// При успехе — устанавливаем done = true, вызываем tx.Commit()
+	// log.Debug().Msg("InsideTx: commit")
+
 	done = true
 	if err = tx.Commit(); err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
