@@ -1,20 +1,84 @@
 package httph
 
 import (
+	"context"
 	"net/http"
 )
 
-// Error структура для ошибок API
-type Error struct {
-	Message string `json:"error"` // Добавьте json тэг со значением "error"
+type contextKeyError struct{}
+
+type contextValueError struct {
+	err        error
+	statusCode int
 }
 
-// ErrorApply отправка ошибки с указанием статуса и сообщения
-func ErrorApply(w http.ResponseWriter, code int, message string) {
-	// Записываем заголовок
-	//  наш EncodeJSON
-	w.Header().Set("Content-Type", MIMEApplicationJSONCharsetUTF8)
-	w.WriteHeader(code)
+func errorPrepare(ctx context.Context) context.Context {
+	return context.WithValue(ctx, contextKeyError{}, &contextValueError{})
+}
 
-	_ = EncodeJSON(w, &Error{Message: message})
+func errorApply(ctx context.Context, err error) {
+	// TODO: Получите *contextValueError из контекста по ключу contextKeyError{}
+	// Если получили успешно (ok == true и v != nil), установите v.err = err
+	v, ok := ctx.Value(contextKeyError{}).(*contextValueError)
+	if ok && v != nil {
+		v.err = err
+	}
+}
+
+func errorGet(ctx context.Context) error {
+	// TODO: Получите *contextValueError из контекста
+	// Если получили успешно, верните v.err
+	// Иначе верните nil
+	v, ok := ctx.Value(contextKeyError{}).(*contextValueError)
+	if ok && v != nil {
+		return v.err
+	}
+	return nil
+}
+
+func errorApplyStatusCode(ctx context.Context, statusCode int) {
+	// TODO: Аналогично errorApply, но для v.statusCode
+	v, ok := ctx.Value(contextKeyError{}).(*contextValueError)
+	if ok && v != nil {
+		v.statusCode = statusCode
+	}
+}
+
+func errorGetStatusCode(ctx context.Context) int {
+	// TODO: Аналогично errorGet, но верните v.statusCode (или 0)
+	v, ok := ctx.Value(contextKeyError{}).(*contextValueError)
+	if ok && v != nil {
+		return v.statusCode
+	}
+	return 0
+}
+
+func ErrorPrepare(r *http.Request) *http.Request {
+	return r.WithContext(errorPrepare(r.Context()))
+}
+
+func ErrorGet(r *http.Request) error {
+	return errorGet(r.Context())
+}
+
+func ErrorApply(r *http.Request, err error) {
+	errorApply(r.Context(), err)
+}
+
+func ErrorApplyStatusCode(r *http.Request, statusCode int) {
+	errorApplyStatusCode(r.Context(), statusCode)
+}
+
+func ErrorGetStatusCode(r *http.Request) int {
+	return errorGetStatusCode(r.Context())
+}
+
+type Middleware = func(http.Handler) http.Handler
+
+func NewErrorMiddleware() Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			next.ServeHTTP(w, ErrorPrepare(r))
+		})
+	}
 }

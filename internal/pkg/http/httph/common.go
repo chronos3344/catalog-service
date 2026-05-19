@@ -35,7 +35,7 @@ func SendEncodedWithMIME(w http.ResponseWriter, r *http.Request, statusCode int,
 	// Вызываем наш EncodeJSON и в случае ошибки вызываем ErrorApply.
 	err := EncodeJSON(w, obj)
 	if err != nil {
-		ErrorApply(w, http.StatusBadRequest, "Неверный формат")
+		ErrorApply(r, err)
 		return
 	}
 }

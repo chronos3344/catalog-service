@@ -10,6 +10,7 @@ import (
 
 	"github.com/chronos3344/catalog-service/internal/app/config/section"
 	"github.com/chronos3344/catalog-service/migration"
+	"github.com/rs/zerolog/log"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
@@ -30,7 +31,7 @@ func (c *Client) GetRawBunDB() *bun.DB {
 	return c.rawBunDB
 }
 
-func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, error) {
+func NewClient(ctx context.Context, cfg section.RepositoryPostgres) (*Client, error) {
 	var u url.URL
 	u.Scheme = "postgres"
 	u.Host = cfg.Address
@@ -42,10 +43,9 @@ func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, erro
 	u.RawQuery = args.Encode()
 
 	dsn := u.String()
-	fmt.Printf("PostgreSQL connection URL: %s\n", dsn)
+	log.Info().Str("dsn", dsn).Msg("PostgreSQL connection URL:")
 
-	fmt.Printf("PostgreSQL connection timeouts - Read: %v, Write: %v\n",
-		cfg.ReadTimeout, cfg.WriteTimeout)
+	log.Info().Str("read_timeout", cfg.ReadTimeout.String()).Str("write_timeout", cfg.WriteTimeout.String()).Msg("PostgreSQL connection timeouts")
 
 	sqlDB := sql.OpenDB(pgdriver.NewConnector(
 		pgdriver.WithDSN(dsn),
@@ -69,7 +69,7 @@ func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, erro
 	client := &Client{
 		rawBunDB: rawBunDB,
 		cfg:      cfg,
-		_bunDB:   rawBunDB,
+		_bunDB:   newTxInjector(rawBunDB),
 	}
 
 	return client, nil
@@ -116,4 +116,48 @@ func (c *Client) Migrate(ctx context.Context) (oldVer, newVer int64, err error) 
 	}
 
 	return oldVer, newVer, nil
+}
+
+func (c *Client) InsideTx(ctx context.Context, fn func(ctx context.Context) error) error {
+	// ШАГ 1 — Проверка вложенности.
+	// Если в контексте уже есть транзакция, просто выполняем fn(ctx) — повторная транзакция не нужна.
+	tx := getTxFromContext(ctx)
+	if tx.Tx != nil {
+		return fn(ctx)
+	}
+
+	// ШАГ 2 — Создание транзакции.
+	// Создаем транзакцию через c.rawBunDB.BeginTx(ctx, nil).
+	tx, err := c.rawBunDB.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	// ШАГ 3 — defer с автоматическим Rollback.
+	// Объявляем флаг done = false.
+	done := false
+
+	defer func() {
+		if !done {
+			// Игнорируем ошибку при rollback, так как оригинальная ошибка важнее
+			_ = tx.Rollback()
+		}
+	}()
+
+	// ШАГ 4 — Выполнение и Commit.
+	// Сохраняем транзакцию в контекст через setTxToContext(ctx, tx).
+	ctxWithTx := setTxToContext(ctx, tx)
+
+	// Вызываем fn с новым контекстом
+	if err = fn(ctxWithTx); err != nil {
+		return err
+	}
+
+	// При успехе — устанавливаем done = true, вызываем tx.Commit()
+	done = true
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
 }

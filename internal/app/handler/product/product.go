@@ -25,21 +25,21 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req entity.RequestProductCreate
 
 	if err := binding.ScanAndValidateJSON(r, &req); err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат запроса")
+		httph.HandleError(w, r, httph.NewHTTPError(http.StatusBadRequest, "Неверный формат запроса"))
 		return
 	}
 
 	product, err := h.serviceProduct.Create(r.Context(), req)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
-			httph.ErrorApply(w, http.StatusNotFound, "Категория не найдена")
+			httph.HandleError(w, r, httph.NewHTTPError(http.StatusNotFound, "Товар не найден"))
 			return
 		}
 		if errors.Is(err, entity.ErrAlreadyExists) {
-			httph.ErrorApply(w, http.StatusConflict, "Товар с таким названием уже существует")
+			httph.HandleError(w, r, httph.NewHTTPError(http.StatusConflict, "Товар с таким названием уже существует"))
 			return
 		}
-		httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
+		httph.HandleError(w, r, httph.NewHTTPError(http.StatusInternalServerError, "Ошибка сервера"))
 		return
 	}
 
@@ -62,17 +62,17 @@ func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
 
 	guid, err := uuid.Parse(guidStr)
 	if err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
+		httph.HandleError(w, r, httph.NewHTTPError(http.StatusBadRequest, "Неверный формат UUID"))
 		return
 	}
 
 	product, err := h.serviceProduct.Get(r.Context(), guid)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
-			httph.ErrorApply(w, http.StatusNotFound, "Товар не найден")
+			httph.HandleError(w, r, httph.NewHTTPError(http.StatusNotFound, "Товар не найден"))
 			return
 		}
-		httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
+		httph.HandleError(w, r, httph.NewHTTPError(http.StatusInternalServerError, "Ошибка сервера"))
 		return
 	}
 
@@ -92,7 +92,7 @@ func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
 func (h *handler) List(w http.ResponseWriter, r *http.Request) {
 	products, err := h.serviceProduct.List(r.Context())
 	if err != nil {
-		httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
+		httph.HandleError(w, r, httph.NewHTTPError(http.StatusInternalServerError, "Ошибка сервера"))
 		return
 	}
 	resp := make(entity.ResponseProductList, 0, len(products))
@@ -117,27 +117,27 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 
 	guid, err := uuid.Parse(guidStr)
 	if err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
+		httph.HandleError(w, r, httph.NewHTTPError(http.StatusBadRequest, "Неверный формат UUID"))
 		return
 	}
 
 	var req entity.RequestProductUpdate
 	if err := binding.ScanAndValidateJSON(r, &req); err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат запроса")
+		httph.HandleError(w, r, httph.NewHTTPError(http.StatusBadRequest, "Неверный формат запроса"))
 		return
 	}
 
 	product, err := h.serviceProduct.Update(r.Context(), guid, req)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
-			httph.ErrorApply(w, http.StatusNotFound, "Товар не найден")
+			httph.HandleError(w, r, httph.NewHTTPError(http.StatusNotFound, "Товар не найден"))
 			return
 		}
 		if errors.Is(err, entity.ErrAlreadyExists) {
-			httph.ErrorApply(w, http.StatusConflict, "Товар с таким названием уже существует")
+			httph.HandleError(w, r, httph.NewHTTPError(http.StatusConflict, "Товар с таким названием уже существует"))
 			return
 		}
-		httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
+		httph.HandleError(w, r, httph.NewHTTPError(http.StatusInternalServerError, "Ошибка сервера"))
 		return
 	}
 
@@ -160,17 +160,17 @@ func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	guid, err := uuid.Parse(guidStr)
 	if err != nil {
-		httph.ErrorApply(w, http.StatusBadRequest, "Неверный формат UUID")
+		httph.HandleError(w, r, httph.NewHTTPError(http.StatusBadRequest, "Неверный формат UUID"))
 		return
 	}
 
 	err = h.serviceProduct.Delete(r.Context(), guid)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
-			httph.ErrorApply(w, http.StatusNotFound, "Товар не найден")
+			httph.HandleError(w, r, httph.NewHTTPError(http.StatusNotFound, "Товар не найден"))
 			return
 		}
-		httph.ErrorApply(w, http.StatusInternalServerError, "Ошибка сервера")
+		httph.HandleError(w, r, httph.NewHTTPError(http.StatusInternalServerError, "Ошибка сервера"))
 		return
 	}
 
