@@ -26,7 +26,6 @@ func (x *txInjector) getIDB(ctx context.Context) bun.IDB {
 		return tx
 	}
 	return x.fallback
-
 }
 
 func (x *txInjector) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
