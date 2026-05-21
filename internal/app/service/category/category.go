@@ -24,14 +24,9 @@ func NewService(repoCategory repository.Category, repoProduct repository.Product
 }
 
 func (s *srv) Create(ctx context.Context, name string) (entity.Category, error) {
-	// TODO: Объявите var category entity.Category вне callback.
-	// Оберните тело метода в s.repoCategory.InsideTx.
-	// Внутри callback присваивайте результат в category и возвращайте только error.
-	// После InsideTx верните category и err.
 	var category entity.Category
 
 	err := s.repoCategory.InsideTx(ctx, func(ctx context.Context) error {
-		// Проверяем существование категории с таким именем
 		categories, err := s.repoCategory.List(ctx, &name)
 		if err != nil {
 			return err
@@ -47,7 +42,6 @@ func (s *srv) Create(ctx context.Context, name string) (entity.Category, error) 
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		}
-
 		return s.repoCategory.Create(ctx, category)
 	})
 
@@ -69,14 +63,14 @@ func (s *srv) List(ctx context.Context) ([]entity.Category, error) {
 
 func (s *srv) Update(ctx context.Context, guid uuid.UUID, name string) (entity.Category, error) {
 	var category entity.Category
+	var err error
 
-	err := s.repoCategory.InsideTx(ctx, func(ctx context.Context) error {
-		category, err := s.repoCategory.GetByGUID(ctx, guid)
+	err = s.repoCategory.InsideTx(ctx, func(ctx context.Context) error {
+		category, err = s.repoCategory.GetByGUID(ctx, guid)
 		if err != nil {
 			return err
 		}
 
-		// Проверяем уникальность нового имени
 		categories, err := s.repoCategory.List(ctx, &name)
 		if err != nil && !errors.Is(err, entity.ErrNotFound) {
 			return err
@@ -86,11 +80,9 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, name string) (entity.C
 			return entity.ErrAlreadyExists
 		}
 
-		// Обновляем имя
 		category.Name = name
 		category.UpdatedAt = time.Now()
 
-		// Сохраняем изменения
 		err = s.repoCategory.Update(ctx, category)
 		if err != nil {
 			return err

@@ -17,9 +17,6 @@ func newTxInjector(db bun.IDB) bun.IDB {
 }
 
 func (x *txInjector) getIDB(ctx context.Context) bun.IDB {
-	// TODO: Извлеките транзакцию через getTxFromContext(ctx).
-	// Если tx.Tx != nil (реальная SQL-транзакция существует), верните tx.
-	// Иначе верните x.fallback.
 	tx := getTxFromContext(ctx)
 	if tx.Tx != nil {
 		return tx
@@ -28,19 +25,16 @@ func (x *txInjector) getIDB(ctx context.Context) bun.IDB {
 }
 
 func (x *txInjector) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
-	// TODO: Получите нужный IDB через getIDB(ctx) и вызовите на нём ExecContext с теми же аргументами
 	db := x.getIDB(ctx)
 	return db.ExecContext(ctx, query, args...)
 }
 
 func (x *txInjector) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
-	// TODO: По аналогии с ExecContext
 	db := x.getIDB(ctx)
 	return db.QueryContext(ctx, query, args...)
 }
 
 func (x *txInjector) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
-	// TODO: По аналогии с ExecContext
 	db := x.getIDB(ctx)
 	return db.QueryRowContext(ctx, query, args...)
 }
