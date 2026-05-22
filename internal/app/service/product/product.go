@@ -25,7 +25,7 @@ func NewService(repoProduct repository.Product, repoCategory repository.Category
 func (s *srv) Create(ctx context.Context, req entity.RequestProductCreate) (entity.Product, error) {
 	var product entity.Product
 
-	err := s.repoCategory.InsideTx(ctx, func(ctx context.Context) error {
+	err := s.repoProduct.InsideTx(ctx, func(ctx context.Context) error {
 		_, err := s.repoCategory.GetByGUID(ctx, req.CategoryGUID)
 		if err != nil {
 			return err
@@ -40,7 +40,7 @@ func (s *srv) Create(ctx context.Context, req entity.RequestProductCreate) (enti
 		}
 
 		now := time.Now()
-		product := entity.Product{
+		product = entity.Product{
 			GUID:         uuid.New(),
 			Name:         req.Name,
 			Description:  req.Description,
@@ -70,11 +70,10 @@ func (s *srv) List(ctx context.Context) ([]entity.Product, error) {
 
 func (s *srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProductUpdate) (entity.Product, error) {
 	var product entity.Product
+	var err error
 
-	err := s.repoCategory.InsideTx(ctx, func(ctx context.Context) error {
-		var err error
-
-		product, err := s.repoProduct.GetByGUID(ctx, guid)
+	err = s.repoProduct.InsideTx(ctx, func(ctx context.Context) error {
+		product, err = s.repoProduct.GetByGUID(ctx, guid)
 		if err != nil {
 			return err
 		}

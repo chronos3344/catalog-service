@@ -17,8 +17,6 @@ func errorPrepare(ctx context.Context) context.Context {
 }
 
 func errorApply(ctx context.Context, err error) {
-	// TODO: Получите *contextValueError из контекста по ключу contextKeyError{}
-	// Если получили успешно (ok == true и v != nil), установите v.err = err
 	v, ok := ctx.Value(contextKeyError{}).(*contextValueError)
 	if ok && v != nil {
 		v.err = err
@@ -26,9 +24,6 @@ func errorApply(ctx context.Context, err error) {
 }
 
 func errorGet(ctx context.Context) error {
-	// TODO: Получите *contextValueError из контекста
-	// Если получили успешно, верните v.err
-	// Иначе верните nil
 	v, ok := ctx.Value(contextKeyError{}).(*contextValueError)
 	if ok && v != nil {
 		return v.err
@@ -37,7 +32,6 @@ func errorGet(ctx context.Context) error {
 }
 
 func errorApplyStatusCode(ctx context.Context, statusCode int) {
-	// TODO: Аналогично errorApply, но для v.statusCode
 	v, ok := ctx.Value(contextKeyError{}).(*contextValueError)
 	if ok && v != nil {
 		v.statusCode = statusCode
@@ -45,7 +39,6 @@ func errorApplyStatusCode(ctx context.Context, statusCode int) {
 }
 
 func errorGetStatusCode(ctx context.Context) int {
-	// TODO: Аналогично errorGet, но верните v.statusCode (или 0)
 	v, ok := ctx.Value(contextKeyError{}).(*contextValueError)
 	if ok && v != nil {
 		return v.statusCode
