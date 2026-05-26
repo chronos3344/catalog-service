@@ -177,14 +177,14 @@ func (b *Builder) BuildHandlerHttpProduct() {
 
 func (b *Builder) BuildProcHttp() {
 	b.exec(true, func(b *Builder) {
-		processor := rprocessor.NewHttp(b.healthHandler, b.categoryHandler, b.productHandler,
+		proc := rprocessor.NewHttp(b.healthHandler, b.categoryHandler, b.productHandler,
 			b.cfg.Processor.WebServer)
-		b.processors = append(b.processors, processor)
+		b.processors = append(b.processors, proc)
 	}, b.healthHandler)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///// PRIVATE ///////////////////////////////////////////////////////////////
+///// PRIVATE //////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
 func (b *Builder) buildConfig() {

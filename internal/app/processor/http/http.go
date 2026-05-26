@@ -2,6 +2,7 @@ package rprocessor
 
 import (
 	"context"
+	"errors"
 	"net"
 	"net/http"
 	"strconv"
@@ -78,34 +79,18 @@ func (p *httpProc) StartAsync(ctx context.Context, wg *sync.WaitGroup) {
 	log.Info().Str("addr", p.server.Addr).Msg("HTTP server started successfully")
 
 	go func() {
-		if err := p.server.Serve(listener); err != nil && err != http.ErrServerClosed {
+		if err := p.serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Error().Err(err).Msg("HTTP server serve error")
 		}
 	}()
 
-	processor.WatchForShutdown(ctx, wg, processor.CloserFunc(func() error {
-		log.Info().Msg("Closing HTTP listener...")
-		return listener.Close()
-	}))
-
-	shutdownTimeout := 5 * time.Second
+	processor.WatchForShutdown(ctx, wg, processor.CloserFunc(listener.Close))
 	processor.WatchForShutdown(ctx, wg, processor.NewCloserContextFunc(
-		func(shutdownCtx context.Context) error {
-			log.Info().Msg("Shutting down HTTP server gracefully...")
-			return p.server.Shutdown(shutdownCtx)
-		},
-		ctx,
-		shutdownTimeout,
+		p.server.Shutdown, context.Background(), 5*time.Second,
 	))
 }
 
-//func (p *httpProc) serve(l net.Listener) error {
-//	_ = p.server.Serve(l)
-//	log.Info().Msg("Starting HTTP server")
-//	return p.server.ListenAndServe()
-//}
-
-func (p *httpProc) Shutdown(ctx context.Context) error {
-	log.Info().Msg("Shutting down HTTP server...")
-	return p.server.Shutdown(ctx)
+func (p *httpProc) serve(l net.Listener) error {
+	log.Info().Msg("Starting HTTP server")
+	return p.server.Serve(l)
 }
