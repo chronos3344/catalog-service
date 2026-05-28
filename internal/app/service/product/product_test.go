@@ -519,7 +519,7 @@ func (s *updateProductSuite) TestUpdate() {
 			req: entity.RequestProductUpdate{
 				Name:         testutil.PtrString("New Name"),
 				Description:  testutil.PtrString("New Description"),
-				Price:        testutil.PtrInt(2000),
+				Price:        testutil.PtrFloat64(2000),
 				CategoryGUID: (*uuid2.UUID)(&newCategoryGUID),
 			},
 			wantErr: nil,
