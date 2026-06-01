@@ -52,6 +52,9 @@ func (s *srv) Create(ctx context.Context, req entity.RequestProductCreate) (enti
 
 		return s.repoProduct.Create(ctx, product)
 	})
+	if err != nil {
+		return entity.Product{}, err
+	}
 	return product, err
 }
 
@@ -80,8 +83,8 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProd
 		}
 
 		// Сохраняем оригинальные значения для проверки
-		//originalName := product.Name
-		//originalCategoryGUID := product.CategoryGUID
+		// originalName := product.Name
+		// originalCategoryGUID := product.CategoryGUID
 
 		// 2. Проверяем и обновляем категорию
 		if req.CategoryGUID != nil && *req.CategoryGUID != product.CategoryGUID {
@@ -122,7 +125,6 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProd
 		// 6. Сохраняем изменения
 		return s.repoProduct.Update(ctx, product)
 	})
-
 	// ВАЖНО: При любой ошибке возвращаем ПУСТОЙ продукт
 	if err != nil {
 		return entity.Product{}, err
