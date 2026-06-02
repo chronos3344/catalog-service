@@ -154,8 +154,8 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProd
                 }</span>
 
                 // Сохраняем оригинальные значения для проверки
-                //originalName := product.Name
-                //originalCategoryGUID := product.CategoryGUID
+                // originalName := product.Name
+                // originalCategoryGUID := product.CategoryGUID
 
                 // 2. Проверяем и обновляем категорию
                 <span class="cov8" title="1">if req.CategoryGUID != nil &amp;&amp; *req.CategoryGUID != product.CategoryGUID </span><span class="cov8" title="1">{
@@ -196,7 +196,6 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProd
                 // 6. Сохраняем изменения
                 return s.repoProduct.Update(ctx, product)</span>
         })
-
         // ВАЖНО: При любой ошибке возвращаем ПУСТОЙ продукт
         <span class="cov8" title="1">if err != nil </span><span class="cov8" title="1">{
                 return entity.Product{}, err

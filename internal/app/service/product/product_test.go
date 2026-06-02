@@ -84,7 +84,12 @@ func (s *createProductSuite) TestCreate() {
 					Once()
 
 				s.productRepo.EXPECT().
-					Create(s.ctx, mock.Anything).
+					Create(s.ctx, mock.MatchedBy(func(p entity.Product) bool {
+						return p.Name == args.req.Name &&
+							p.Description == args.req.Description &&
+							p.Price == args.req.Price &&
+							p.CategoryGUID == args.req.CategoryGUID
+					})).
 					Return(nil).
 					Once()
 			},
@@ -118,8 +123,13 @@ func (s *createProductSuite) TestCreate() {
 					Once()
 
 				s.productRepo.EXPECT().
-					Create(s.ctx, mock.Anything).
-					Return(createError). // ← ОБЯЗАТЕЛЬНО
+					Create(s.ctx, mock.MatchedBy(func(p entity.Product) bool {
+						return p.Name == args.req.Name &&
+							p.Description == args.req.Description &&
+							p.Price == args.req.Price &&
+							p.CategoryGUID == args.req.CategoryGUID
+					})).
+					Return(createError).
 					Once()
 			},
 		},
@@ -281,7 +291,7 @@ func (s *getByGUIDProductSuite) TestGetByGUID() {
 				s.productRepo.EXPECT().
 					GetByGUID(s.ctx, guid).
 					Return(expectedProduct, nil).
-					Maybe()
+					Once()
 			},
 		},
 		{
@@ -292,7 +302,7 @@ func (s *getByGUIDProductSuite) TestGetByGUID() {
 				s.productRepo.EXPECT().
 					GetByGUID(s.ctx, guid).
 					Return(entity.Product{}, entity.ErrNotFound).
-					Maybe()
+					Once()
 			},
 		},
 	}
@@ -698,13 +708,8 @@ func (s *updateProductSuite) TestUpdate() {
 							return catGUID != nil && *catGUID == categoryGUID
 						}),
 					).
-					Return(nil, dbError). // Возвращаем ошибку базы данных
+					Return(nil, dbError).
 					Once()
-
-				// Update НЕ должен вызываться
-				s.productRepo.EXPECT().
-					Update(s.ctx, mock.Anything).
-					Times(0)
 			},
 		},
 
@@ -827,22 +832,23 @@ func (s *updateProductSuite) TestUpdate() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			s.productRepo.ExpectedCalls = nil
-			s.productRepo.Calls = nil
-			s.categoryRepo.ExpectedCalls = nil
-			s.categoryRepo.Calls = nil
+			// ВАЖНО: создаем новые моки для каждого теста
+			s.productRepo = mocks.NewMockProduct(s.T())
+			s.categoryRepo = mocks.NewMockCategory(s.T())
+			s.srv = &srv{
+				repoProduct:  s.productRepo,
+				repoCategory: s.categoryRepo,
+			}
 
 			tc.prepare(tc.guid, tc.req)
 
 			result, err := s.srv.Update(s.ctx, tc.guid, tc.req)
 
 			if tc.wantErr != nil {
-				s.Error(err)
 				s.ErrorIs(err, tc.wantErr)
-				s.Equal(uuid.Nil, result.GUID)
+				s.Empty(result.GUID)
 			} else {
 				s.NoError(err)
-				s.NotEqual(uuid.Nil, result.GUID)
 				s.Equal(tc.guid, result.GUID)
 			}
 		})

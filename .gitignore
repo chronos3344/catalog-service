@@ -36,3 +36,5 @@ vendor/         # папка с зависимостями Go Modules (може�
 config.local.*  # локальные настройки проекта.idea/
 init.sql
 
+coverage.out
+coverage.html
