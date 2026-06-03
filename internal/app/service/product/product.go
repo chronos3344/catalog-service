@@ -52,6 +52,9 @@ func (s *srv) Create(ctx context.Context, req entity.RequestProductCreate) (enti
 
 		return s.repoProduct.Create(ctx, product)
 	})
+	if err != nil {
+		return entity.Product{}, err
+	}
 	return product, err
 }
 
@@ -73,22 +76,31 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProd
 	var err error
 
 	err = s.repoProduct.InsideTx(ctx, func(ctx context.Context) error {
+		// 1. Получаем существующий продукт
 		product, err = s.repoProduct.GetByGUID(ctx, guid)
 		if err != nil {
 			return err
 		}
 
+		// Сохраняем оригинальные значения для проверки
+		// originalName := product.Name
+		// originalCategoryGUID := product.CategoryGUID
+
+		// 2. Проверяем и обновляем категорию
 		if req.CategoryGUID != nil && *req.CategoryGUID != product.CategoryGUID {
 			_, err := s.repoCategory.GetByGUID(ctx, *req.CategoryGUID)
 			if err != nil {
-				return err
+				return err // Возвращаем ошибку, если категория не найдена
 			}
 			product.CategoryGUID = *req.CategoryGUID
 		}
 
+		// 3. Обновляем имя
 		if req.Name != nil {
 			product.Name = *req.Name
 		}
+
+		// 4. Обновляем цену и описание
 		if req.Price != nil {
 			product.Price = *req.Price
 		}
@@ -96,21 +108,29 @@ func (s *srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProd
 			product.Description = req.Description
 		}
 
+		// 5. ПРОВЕРКА УНИКАЛЬНОСТИ ИМЕНИ (важно делать после обновления, но до сохранения)
 		existing, err := s.repoProduct.List(ctx, &product.Name, &product.CategoryGUID)
 		if err != nil {
 			return err
 		}
 		for _, p := range existing {
 			if p.GUID != guid {
+				// Найден другой продукт с таким же именем в той же категории
 				return entity.ErrAlreadyExists
 			}
 		}
 
 		product.UpdatedAt = time.Now()
 
+		// 6. Сохраняем изменения
 		return s.repoProduct.Update(ctx, product)
 	})
-	return product, err
+	// ВАЖНО: При любой ошибке возвращаем ПУСТОЙ продукт
+	if err != nil {
+		return entity.Product{}, err
+	}
+
+	return product, nil
 }
 
 func (s *srv) Delete(ctx context.Context, guid uuid.UUID) error {
