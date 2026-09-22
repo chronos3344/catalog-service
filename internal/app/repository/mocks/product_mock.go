@@ -175,6 +175,65 @@ func (_c *MockProduct_GetByGUID_Call) RunAndReturn(run func(context.Context, uui
 	return _c
 }
 
+// GetByGUIDs provides a mock function with given fields: ctx, guids
+func (_m *MockProduct) GetByGUIDs(ctx context.Context, guids []uuid.UUID) ([]entity.Product, error) {
+	ret := _m.Called(ctx, guids)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetByGUIDs")
+	}
+
+	var r0 []entity.Product
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, []uuid.UUID) ([]entity.Product, error)); ok {
+		return rf(ctx, guids)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []uuid.UUID) []entity.Product); ok {
+		r0 = rf(ctx, guids)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.Product)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []uuid.UUID) error); ok {
+		r1 = rf(ctx, guids)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockProduct_GetByGUIDs_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetByGUIDs'
+type MockProduct_GetByGUIDs_Call struct {
+	*mock.Call
+}
+
+// GetByGUIDs is a helper method to define mock.On call
+//   - ctx context.Context
+//   - guids []uuid.UUID
+func (_e *MockProduct_Expecter) GetByGUIDs(ctx interface{}, guids interface{}) *MockProduct_GetByGUIDs_Call {
+	return &MockProduct_GetByGUIDs_Call{Call: _e.mock.On("GetByGUIDs", ctx, guids)}
+}
+
+func (_c *MockProduct_GetByGUIDs_Call) Run(run func(ctx context.Context, guids []uuid.UUID)) *MockProduct_GetByGUIDs_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].([]uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *MockProduct_GetByGUIDs_Call) Return(_a0 []entity.Product, _a1 error) *MockProduct_GetByGUIDs_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockProduct_GetByGUIDs_Call) RunAndReturn(run func(context.Context, []uuid.UUID) ([]entity.Product, error)) *MockProduct_GetByGUIDs_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // InsideTx provides a mock function with given fields: ctx, fn
 func (_m *MockProduct) InsideTx(ctx context.Context, fn func(context.Context) error) error {
 	ret := _m.Called(ctx, fn)

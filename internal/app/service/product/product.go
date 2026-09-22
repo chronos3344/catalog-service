@@ -71,6 +71,13 @@ func (s *srv) List(ctx context.Context) ([]entity.Product, error) {
 	return s.repoProduct.List(ctx, nil, nil)
 }
 
+func (s *srv) GetByGUIDs(ctx context.Context, guids []uuid.UUID) ([]entity.Product, error) {
+	if len(guids) == 0 {
+		return nil, nil
+	}
+	return s.repoProduct.GetByGUIDs(ctx, guids)
+}
+
 func (s *srv) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProductUpdate) (entity.Product, error) {
 	var product entity.Product
 	var err error
