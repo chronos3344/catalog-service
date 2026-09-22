@@ -9,6 +9,7 @@ import (
 	"github.com/chronos3344/catalog-service/internal/app/repository"
 	rcpostgres "github.com/chronos3344/catalog-service/internal/app/repository/conn/postgres"
 	"github.com/google/uuid"
+	"github.com/uptrace/bun"
 )
 
 type (
@@ -37,6 +38,19 @@ func (r *repoPg) GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Product,
 		return entity.Product{}, err
 	}
 	return product, nil
+}
+
+func (r *repoPg) GetByGUIDs(ctx context.Context, guids []uuid.UUID) ([]entity.Product, error) {
+	var products []entity.Product
+	err := r._DB.NewSelect().
+		Model(&products).
+		Where("guid IN (?)", bun.In(guids)).
+		Order("created_at DESC").
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return products, nil
 }
 
 func (r *repoPg) List(ctx context.Context, name *string, categoryGUID *uuid.UUID) ([]entity.Product, error) {
