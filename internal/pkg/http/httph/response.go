@@ -41,6 +41,7 @@ func HandleError(w http.ResponseWriter, r *http.Request, err error) {
 		sendError(w, status, hc)
 		return
 	}
+
 	ErrorApplyStatusCode(r, http.StatusInternalServerError)
 	sendError(w, http.StatusInternalServerError, err)
 }
